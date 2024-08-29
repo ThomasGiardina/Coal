@@ -18,6 +18,7 @@ public class SecurityConfig {
             .csrf(AbstractHttpConfigurer::disable)
             .authorizeHttpRequests(req -> req
                 .requestMatchers("/videojuegos/**").permitAll() // Permitir acceso sin autenticación a los endpoints de videojuegos
+                .requestMatchers("/carritos/**").permitAll() // Permitir acceso sin autenticación a los endpoints de carritos")
                 .anyRequest().authenticated()) // Requerir autenticación para cualquier otro endpoint
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 
