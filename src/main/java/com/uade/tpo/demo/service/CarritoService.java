@@ -42,4 +42,9 @@ public class CarritoService {
     public void removeItemFromCarrito(Long itemId) {
         itemCarritoDAO.deleteById(itemId);
     }
+
+    public void vaciarCarrito(Carrito carrito) {
+        carrito.getItems().clear();
+        carritoDAO.save(carrito);
+    }
 }

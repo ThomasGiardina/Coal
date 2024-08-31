@@ -1,10 +1,15 @@
 package com.uade.tpo.demo.controllers;
 
 import com.uade.tpo.demo.entity.Carrito;
+import com.uade.tpo.demo.entity.Pedido;
+import com.uade.tpo.demo.entity.Usuario;
 import com.uade.tpo.demo.entity.Videojuego;
 import com.uade.tpo.demo.service.CarritoService;
+import com.uade.tpo.demo.service.PedidoService;
 import com.uade.tpo.demo.service.VideojuegoService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -15,6 +20,9 @@ public class CarritoController {
 
     @Autowired
     private VideojuegoService videojuegoService;
+
+    @Autowired
+    private PedidoService pedidoService;
 
     @GetMapping("/{id}")
     public Carrito getCarritoById(@PathVariable Long id) {
@@ -35,5 +43,21 @@ public class CarritoController {
     @DeleteMapping("/items/{itemId}")
     public void removeItemFromCarrito(@PathVariable Long itemId) {
         carritoService.removeItemFromCarrito(itemId);
+    }
+
+
+    @PostMapping("/confirmar/{carritoId}")
+    public ResponseEntity<Pedido> confirmarCarrito(@PathVariable Long carritoId) {
+        Carrito carrito = carritoService.getCarritoById(carritoId);
+
+        if (carrito == null) {
+            return ResponseEntity.notFound().build();
+        }
+
+        Usuario usuario = carrito.getUsuario(); 
+        Pedido pedido = pedidoService.crearPedido(carrito, usuario);
+        carritoService.vaciarCarrito(carrito);
+
+        return ResponseEntity.ok(pedido);
     }
 }
