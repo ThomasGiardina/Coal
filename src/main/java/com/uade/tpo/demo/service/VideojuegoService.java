@@ -1,6 +1,7 @@
 package com.uade.tpo.demo.service;
 
 import com.uade.tpo.demo.entity.Videojuego;
+import com.uade.tpo.demo.entity.Videojuego.CategoriaJuego;
 import com.uade.tpo.demo.exception.VideojuegoNotFoundException;
 
 import java.util.List;
@@ -17,4 +18,5 @@ public interface VideojuegoService {
     List<Videojuego> buscarPorPlataforma(String plataforma);
     List<Videojuego> buscarPorRangoDePrecio(Double minPrecio, Double maxPrecio);
     List<Videojuego> buscarPorDescripcion(String keyword);
+    List<Videojuego> buscarPorCategoria(CategoriaJuego categoria);
 }

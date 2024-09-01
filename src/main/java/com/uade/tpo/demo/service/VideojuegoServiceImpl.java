@@ -1,6 +1,7 @@
 package com.uade.tpo.demo.service;
 
 import com.uade.tpo.demo.entity.Videojuego;
+import com.uade.tpo.demo.entity.Videojuego.CategoriaJuego;
 import com.uade.tpo.demo.exception.VideojuegoNotFoundException;
 import com.uade.tpo.demo.repository.VideojuegoRepository;
 
@@ -85,5 +86,9 @@ public class VideojuegoServiceImpl implements VideojuegoService {
     @Override
     public List<Videojuego> buscarPorDescripcion(String keyword) {
         return videojuegoRepository.findByDescripcionContaining(keyword);
+    }
+
+    public List<Videojuego> buscarPorCategoria(CategoriaJuego categoria) {
+        return videojuegoRepository.findByCategoria(categoria);
     }
 }

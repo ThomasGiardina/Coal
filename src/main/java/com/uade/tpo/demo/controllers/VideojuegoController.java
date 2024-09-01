@@ -2,6 +2,7 @@ package com.uade.tpo.demo.controllers;
 
 import com.uade.tpo.demo.dto.VideojuegoDTO;
 import com.uade.tpo.demo.entity.Videojuego;
+import com.uade.tpo.demo.entity.Videojuego.CategoriaJuego;
 import com.uade.tpo.demo.service.VideojuegoService;
 
 import org.springframework.http.ResponseEntity;
@@ -96,6 +97,17 @@ public class VideojuegoController {
         return ResponseEntity.ok(videojuegosDTO);
     }
 
+
+    @GetMapping("/buscarPorCategoria")
+    public ResponseEntity<List<VideojuegoDTO>> buscarPorCategoria(@RequestParam CategoriaJuego categoria) {
+        List<Videojuego> videojuegos = videojuegoService.buscarPorCategoria(categoria);
+        List<VideojuegoDTO> videojuegosDTO = videojuegos.stream()
+                .map(this::convertirADTO)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(videojuegosDTO);
+    }
+
+
     // Métodos de utilidad para convertir entre DTO y Entidad
 
     private VideojuegoDTO convertirADTO(Videojuego videojuego) {
@@ -105,6 +117,7 @@ public class VideojuegoController {
         dto.setDescripcion(videojuego.getDescripcion());
         dto.setPrecio(videojuego.getPrecio());
         dto.setPlataforma(videojuego.getPlataforma());
+        dto.setCategoria(videojuego.getCategoria());
         dto.setStock(videojuego.getStock());
         return dto;
     }
@@ -116,6 +129,7 @@ public class VideojuegoController {
         videojuego.setDescripcion(dto.getDescripcion());
         videojuego.setPrecio(dto.getPrecio());
         videojuego.setPlataforma(dto.getPlataforma());
+        videojuego.setCategoria(dto.getCategoria());
         videojuego.setStock(dto.getStock());
         return videojuego;
     }
