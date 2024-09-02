@@ -20,6 +20,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/v1/auth/**").permitAll() // Permitir acceso sin autenticación a los endpoints de autenticación
                 .requestMatchers("/videojuegos/**").permitAll() // Permitir acceso sin autenticación a los endpoints de videojuegos
                 .requestMatchers("/carritos/**").permitAll() // Permitir acceso sin autenticación a los endpoints de carritos
+                .requestMatchers("/api/pedidos/**").permitAll() // Permitir acceso sin autenticación a los endpoints de pedidos
                 .requestMatchers("/api/metodos-pago/**").permitAll() // Permitir acceso sin autenticación a los endpoints de métodos de pago
                 .anyRequest().authenticated()) // Requerir autenticación para cualquier otro endpoint
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));

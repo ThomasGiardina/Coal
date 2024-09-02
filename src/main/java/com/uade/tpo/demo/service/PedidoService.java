@@ -19,7 +19,6 @@ import jakarta.transaction.Transactional;
 @Service
 public class PedidoService {
     
-
     @Autowired
     private PedidoRepository pedidoRepository;
 
@@ -28,7 +27,7 @@ public class PedidoService {
         Pedido pedido = new Pedido();
         pedido.setComprador(usuario);
         pedido.setFecha(LocalDateTime.now());
-        pedido.setEstado(EstadoPedido.CONFIRMADO);
+        pedido.setEstado(EstadoPedido.PENDIENTE);
 
         List<ItemPedido> items = carrito.getItems().stream()
             .map(itemCarrito -> {
@@ -45,11 +44,27 @@ public class PedidoService {
 
         return pedidoRepository.save(pedido);
     }
-            
 
+    @Transactional
+    public Pedido pagarPedido(Long pedidoId) {
+        Pedido pedido = pedidoRepository.findById(pedidoId).orElseThrow(() -> new RuntimeException("Pedido no encontrado"));
+        if (pedido.getEstado() == EstadoPedido.PENDIENTE) {
+            pedido.setEstado(EstadoPedido.CONFIRMADO);
+            return pedidoRepository.save(pedido);
+        } else {
+            throw new RuntimeException("El pedido no está en estado pendiente");
+        }
+    }
 
+    @Transactional
+    public void cancelarPedidosPendientes() {
+        List<Pedido> pedidosPendientes = pedidoRepository.findAll().stream()
+            .filter(pedido -> pedido.getEstado() == EstadoPedido.PENDIENTE && pedido.getFecha().isBefore(LocalDateTime.now().minusHours(1)))
+            .collect(Collectors.toList());
 
-
-
-
+        for (Pedido pedido : pedidosPendientes) {
+            pedido.setEstado(EstadoPedido.CANCELADO);
+            pedidoRepository.save(pedido);
+        }
+    }
 }
