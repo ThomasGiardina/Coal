@@ -60,6 +60,9 @@ public class Usuario implements UserDetails, Serializable {
     @OneToOne(mappedBy = "usuario", cascade = CascadeType.ALL, orphanRemoval = true)
     private Carrito carrito;
 
+    @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<MetodoPago> metodosPago;
+
     // Getters y Setters adicionales, si es necesario
 
     @Override

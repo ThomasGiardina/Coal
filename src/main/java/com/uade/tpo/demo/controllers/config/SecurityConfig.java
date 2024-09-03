@@ -6,24 +6,30 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+
+import lombok.RequiredArgsConstructor;
+
 import org.springframework.security.config.http.SessionCreationPolicy;
 
 @Configuration
 @EnableWebSecurity
+@RequiredArgsConstructor
 public class SecurityConfig {
 
+    private final JwtAuthenticationFilter jwtAuthenticationFilter;
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
             .csrf(AbstractHttpConfigurer::disable)
             .authorizeHttpRequests(req -> req
-                .requestMatchers("/api/v1/auth/**").permitAll() // Permitir acceso sin autenticación a los endpoints de autenticación
-                .requestMatchers("/videojuegos/**").permitAll() // Permitir acceso sin autenticación a los endpoints de videojuegos
-                .requestMatchers("/carritos/**").permitAll() // Permitir acceso sin autenticación a los endpoints de carritos
-                .requestMatchers("/api/pedidos/**").permitAll() // Permitir acceso sin autenticación a los endpoints de pedidos
-                .requestMatchers("/api/metodos-pago/**").permitAll() // Permitir acceso sin autenticación a los endpoints de métodos de pago
-                .anyRequest().authenticated()) // Requerir autenticación para cualquier otro endpoint
-            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
+                .requestMatchers("/api/v1/auth/**").permitAll()
+                .requestMatchers("/videojuegos/**").permitAll()
+                .requestMatchers("/carritos/**").permitAll()
+                .requestMatchers("/metodosPago/**").authenticated()
+                .anyRequest().authenticated())
+            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }

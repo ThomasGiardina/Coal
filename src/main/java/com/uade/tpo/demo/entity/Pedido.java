@@ -27,6 +27,10 @@ public class Pedido {
     @JoinColumn(name = "comprador_id")
     private Usuario comprador;
 
+    @ManyToOne
+    @JoinColumn(name = "metodo_pago_id")
+    private MetodoPago metodoPago;
+
     private LocalDateTime fecha;
 
     private Double montoTotal;

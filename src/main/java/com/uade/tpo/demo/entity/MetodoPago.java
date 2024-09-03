@@ -1,8 +1,8 @@
 package com.uade.tpo.demo.entity;
 
-import java.util.Date;
 import jakarta.persistence.*;
 import lombok.Data;
+import java.util.Date;
 
 @Data
 @Entity
@@ -10,19 +10,15 @@ public class MetodoPago {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long idMetodoPago;
-
-    @ManyToOne
-    @JoinColumn(name = "id_usuario", nullable = false)
-    private Usuario user;  
+    private Long id;
 
     @Column(nullable = false)
     private String nombrePropietario;
 
-    @Column(nullable = false, length = 16)
+    @Column(nullable = false)
     private String numeroTarjeta;
 
-    @Column(nullable = false, length = 3)
+    @Column(nullable = false)
     private String codigoSeguridad;
 
     @Temporal(TemporalType.DATE)
@@ -31,4 +27,8 @@ public class MetodoPago {
 
     @Column(nullable = false)
     private String direccion;
+
+    @ManyToOne
+    @JoinColumn(name = "id_usuario", nullable = false)
+    private Usuario usuario;
 }
