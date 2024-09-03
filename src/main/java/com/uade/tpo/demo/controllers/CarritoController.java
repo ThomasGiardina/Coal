@@ -1,5 +1,6 @@
 package com.uade.tpo.demo.controllers;
 
+import com.uade.tpo.demo.dto.ItemCarritoDTO;
 import com.uade.tpo.demo.entity.Carrito;
 import com.uade.tpo.demo.entity.Pedido;
 import com.uade.tpo.demo.entity.Usuario;
@@ -35,10 +36,10 @@ public class CarritoController {
     }
 
     @PostMapping("/{carritoId}/items")
-    public void addItemToCarrito(@PathVariable Long carritoId, @RequestParam Long videojuegoId, @RequestParam Integer cantidad) {
-        Videojuego videojuego = videojuegoService.obtenerVideojuegoPorId(videojuegoId);
-        carritoService.addItemToCarrito(carritoId, videojuego, cantidad);
-    }
+    public void addItemToCarrito(@PathVariable Long carritoId, @RequestBody ItemCarritoDTO itemCarritoDTO) {
+        Videojuego videojuego = videojuegoService.obtenerVideojuegoPorId(itemCarritoDTO.getVideojuegoId());
+        carritoService.addItemToCarrito(carritoId, videojuego, itemCarritoDTO.getCantidad());
+}
 
     @DeleteMapping("/items/{itemId}")
     public void removeItemFromCarrito(@PathVariable Long itemId) {
