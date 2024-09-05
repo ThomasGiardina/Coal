@@ -9,10 +9,12 @@ import org.springframework.stereotype.Service;
 
 import com.uade.tpo.demo.entity.Carrito;
 import com.uade.tpo.demo.entity.ItemPedido;
+import com.uade.tpo.demo.entity.MetodoPago;
 import com.uade.tpo.demo.entity.Pedido;
 import com.uade.tpo.demo.entity.Usuario;
 import com.uade.tpo.demo.entity.Pedido.EstadoPedido;
 import com.uade.tpo.demo.repository.PedidoRepository;
+import com.uade.tpo.demo.repository.MetodoPagoRepository;
 
 import jakarta.transaction.Transactional;
 
@@ -21,6 +23,9 @@ public class PedidoService {
     
     @Autowired
     private PedidoRepository pedidoRepository;
+
+    @Autowired
+    private MetodoPagoRepository metodoPagoRepository;
 
     @Transactional
     public Pedido crearPedido(Carrito carrito, Usuario usuario) {
@@ -46,14 +51,25 @@ public class PedidoService {
     }
 
     @Transactional
-    public Pedido pagarPedido(Long pedidoId) {
+    public Pedido pagarPedido(Long pedidoId, Long metodoPagoId) {
         Pedido pedido = pedidoRepository.findById(pedidoId).orElseThrow(() -> new RuntimeException("Pedido no encontrado"));
-        if (pedido.getEstado() == EstadoPedido.PENDIENTE) {
-            pedido.setEstado(EstadoPedido.CONFIRMADO);
-            return pedidoRepository.save(pedido);
-        } else {
+        
+        if (pedido.getEstado() != EstadoPedido.PENDIENTE) {
             throw new RuntimeException("El pedido no está en estado pendiente");
         }
+        
+        if (metodoPagoId == null) {
+            throw new RuntimeException("Debe seleccionar un método de pago antes de proceder con el pago.");
+        }
+
+        // Obtener el método de pago seleccionado y asignarlo al pedido
+        MetodoPago metodoPago = metodoPagoRepository.findById(metodoPagoId)
+                .orElseThrow(() -> new RuntimeException("Método de pago no encontrado"));
+        
+        pedido.setMetodoPago(metodoPago);
+        pedido.setEstado(EstadoPedido.CONFIRMADO);
+        
+        return pedidoRepository.save(pedido);
     }
 
     @Transactional

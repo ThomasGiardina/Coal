@@ -15,8 +15,8 @@ public class PedidoController {
     private PedidoService pedidoService;
 
     @PostMapping("/{pedidoId}/pagar")
-    public ResponseEntity<Pedido> pagarPedido(@PathVariable Long pedidoId) {
-        Pedido pedido = pedidoService.pagarPedido(pedidoId);
+    public ResponseEntity<Pedido> pagarPedido(@PathVariable Long pedidoId, @RequestBody Long metodoPagoId) {
+        Pedido pedido = pedidoService.pagarPedido(pedidoId, metodoPagoId);
         return ResponseEntity.ok(pedido);
     }
 }

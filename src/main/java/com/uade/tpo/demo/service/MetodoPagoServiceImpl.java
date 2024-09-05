@@ -1,6 +1,7 @@
 package com.uade.tpo.demo.service;
 
 import com.uade.tpo.demo.entity.MetodoPago;
+import com.uade.tpo.demo.entity.Usuario;
 import com.uade.tpo.demo.exception.MetodoPagoNotFoundException;
 import com.uade.tpo.demo.repository.MetodoPagoRepository;
 import org.springframework.stereotype.Service;
@@ -47,5 +48,10 @@ public class MetodoPagoServiceImpl implements MetodoPagoService {
     public void eliminarMetodoPago(Long metodoPagoId) throws MetodoPagoNotFoundException {
         MetodoPago metodoPago = obtenerMetodoPagoPorId(metodoPagoId);
         metodoPagoRepository.delete(metodoPago);
+    }
+
+    @Override
+    public List<MetodoPago> obtenerMetodosPagoPorUsuario(Usuario usuario) {
+        return metodoPagoRepository.findAllByUsuario(usuario);
     }
 }

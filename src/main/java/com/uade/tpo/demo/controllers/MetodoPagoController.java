@@ -7,7 +7,6 @@ import com.uade.tpo.demo.controllers.config.JwtService;
 import com.uade.tpo.demo.dto.MetodoPagoDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -62,6 +61,31 @@ public class MetodoPagoController {
         List<MetodoPagoDTO> metodosPagoDTO = metodosPago.stream()
                 .map(this::convertirADTO)
                 .collect(Collectors.toList());
+        return ResponseEntity.ok(metodosPagoDTO);
+    }
+
+        //nuevo para conseguir los metodos de pago de un usuario
+        
+    @GetMapping("/usuario")
+    public ResponseEntity<List<MetodoPagoDTO>> obtenerMetodosPagoUsuario(@RequestHeader("Authorization") String token) {
+        // Extraer el token JWT del header "Authorization"
+        String jwt = token.substring(7); // Remover "Bearer " del token
+
+        // Usar JwtService para obtener el email del usuario desde el token
+        String userEmail = jwtService.extractUsername(jwt);
+
+        // Buscar el usuario en la base de datos por su email
+        Usuario usuario = userRepository.findByEmail(userEmail)
+                            .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado"));
+
+        // Obtener los métodos de pago del usuario
+        List<MetodoPago> metodosPago = metodoPagoService.obtenerMetodosPagoPorUsuario(usuario);
+
+        // Convertir los métodos de pago a DTO
+        List<MetodoPagoDTO> metodosPagoDTO = metodosPago.stream()
+                .map(this::convertirADTO)
+                .collect(Collectors.toList());
+
         return ResponseEntity.ok(metodosPagoDTO);
     }
 
