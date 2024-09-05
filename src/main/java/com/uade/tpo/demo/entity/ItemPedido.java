@@ -6,7 +6,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
 import lombok.Data;
-
+import com.fasterxml.jackson.annotation.JsonBackReference;
 
 @Data
 @Entity
@@ -19,6 +19,7 @@ public class ItemPedido {
     private Videojuego videojuego;
 
     @ManyToOne
+    @JsonBackReference
     private Pedido pedido;
 
     private Integer cantidad;

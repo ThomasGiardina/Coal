@@ -27,6 +27,9 @@ public class PedidoService {
     @Autowired
     private MetodoPagoRepository metodoPagoRepository;
 
+    @Autowired
+    private CarritoService carritoService;
+
     @Transactional
     public Pedido crearPedido(Carrito carrito, Usuario usuario) {
         Pedido pedido = new Pedido();
@@ -47,7 +50,9 @@ public class PedidoService {
         pedido.setMontoTotal(carrito.getItems().stream()
             .mapToDouble(item -> item.getPrecio() * item.getCantidad()).sum());
 
-        return pedidoRepository.save(pedido);
+        Pedido nuevoPedido = pedidoRepository.save(pedido);
+        carritoService.vaciarCarrito(carrito);
+        return nuevoPedido;
     }
 
     @Transactional

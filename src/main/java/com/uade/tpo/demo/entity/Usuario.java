@@ -9,6 +9,8 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -46,6 +48,7 @@ public class Usuario implements UserDetails, Serializable {
     @Column(nullable = false)
     private String lastName;
 
+    @JsonIgnore
     @Column(nullable = false)
     private String password;
 
@@ -58,6 +61,7 @@ public class Usuario implements UserDetails, Serializable {
     private List<Pedido> pedidos;
 
     @OneToOne(mappedBy = "usuario", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference
     private Carrito carrito;
 
     @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL, orphanRemoval = true)

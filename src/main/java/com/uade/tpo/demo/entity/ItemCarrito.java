@@ -2,6 +2,7 @@ package com.uade.tpo.demo.entity;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import com.fasterxml.jackson.annotation.JsonBackReference;
 
 @Data
 @Entity
@@ -16,6 +17,7 @@ public class ItemCarrito {
 
     @ManyToOne
     @JoinColumn(name = "carrito_id")
+    @JsonBackReference
     private Carrito carrito;
 
     private Integer cantidad;

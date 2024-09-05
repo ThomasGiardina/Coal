@@ -77,7 +77,6 @@ public class MetodoPagoController {
         // Buscar el usuario en la base de datos por su email
         Usuario usuario = userRepository.findByEmail(userEmail)
                             .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado"));
-
         // Obtener los métodos de pago del usuario
         List<MetodoPago> metodosPago = metodoPagoService.obtenerMetodosPagoPorUsuario(usuario);
 

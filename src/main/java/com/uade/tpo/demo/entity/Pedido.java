@@ -14,6 +14,8 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import lombok.Data;
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 
 @Data
 @Entity
@@ -25,6 +27,7 @@ public class Pedido {
 
     @ManyToOne
     @JoinColumn(name = "comprador_id")
+    @JsonBackReference
     private Usuario comprador;
 
     @ManyToOne
@@ -40,6 +43,7 @@ public class Pedido {
 
     @OneToMany(cascade = CascadeType.ALL)
     @JoinColumn(name = "pedido_id")
+    @JsonManagedReference
     private List<ItemPedido> productosAdquiridos;
 
     public enum EstadoPedido {
