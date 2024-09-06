@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.uade.tpo.demo.entity.Carrito;
+import com.uade.tpo.demo.entity.HistorialPedidos;
 import com.uade.tpo.demo.entity.ItemPedido;
 import com.uade.tpo.demo.entity.MetodoPago;
 import com.uade.tpo.demo.entity.Pedido;
@@ -16,15 +17,19 @@ import com.uade.tpo.demo.entity.Videojuego;
 import com.uade.tpo.demo.exception.InsufficientStockException;
 import com.uade.tpo.demo.entity.Pedido.EstadoPedido;
 import com.uade.tpo.demo.repository.PedidoRepository;
+import com.uade.tpo.demo.repository.HistorialPedidosRepository;
 import com.uade.tpo.demo.repository.MetodoPagoRepository;
 
 import jakarta.transaction.Transactional;
 
 @Service
 public class PedidoService {
-    
+
     @Autowired
     private PedidoRepository pedidoRepository;
+
+    @Autowired
+    private HistorialPedidosRepository historialPedidosRepository;
 
     @Autowired
     private MetodoPagoRepository metodoPagoRepository;
@@ -35,7 +40,7 @@ public class PedidoService {
     @Autowired
     private VideojuegoService videojuegoService;
 
-     @Transactional
+    @Transactional
     public Pedido crearPedido(Carrito carrito, Usuario usuario) {
         Pedido pedido = new Pedido();
         pedido.setComprador(usuario);
@@ -70,32 +75,47 @@ public class PedidoService {
             .mapToDouble(item -> item.getPrecio() * item.getCantidad()).sum());
 
         Pedido nuevoPedido = pedidoRepository.save(pedido);
-        carritoService.vaciarCarrito(carrito); 
+        carritoService.vaciarCarrito(carrito);
 
         return nuevoPedido;
     }
 
-
     @Transactional
     public Pedido pagarPedido(Long pedidoId, Long metodoPagoId) {
-        Pedido pedido = pedidoRepository.findById(pedidoId).orElseThrow(() -> new RuntimeException("Pedido no encontrado"));
-        
+        Pedido pedido = pedidoRepository.findById(pedidoId)
+            .orElseThrow(() -> new RuntimeException("Pedido no encontrado"));
+
         if (pedido.getEstado() != EstadoPedido.PENDIENTE) {
             throw new RuntimeException("El pedido no está en estado pendiente");
         }
-        
+
         if (metodoPagoId == null) {
             throw new RuntimeException("Debe seleccionar un método de pago antes de proceder con el pago.");
         }
 
         // Obtener el método de pago seleccionado y asignarlo al pedido
         MetodoPago metodoPago = metodoPagoRepository.findById(metodoPagoId)
-                .orElseThrow(() -> new RuntimeException("Método de pago no encontrado"));
-        
+            .orElseThrow(() -> new RuntimeException("Método de pago no encontrado"));
+
         pedido.setMetodoPago(metodoPago);
         pedido.setEstado(EstadoPedido.CONFIRMADO);
-        
-        return pedidoRepository.save(pedido);
+        pedidoRepository.save(pedido);
+
+        // Registrar cada videojuego en el historial
+        for (ItemPedido item : pedido.getProductosAdquiridos()) {
+            HistorialPedidos historial = new HistorialPedidos();
+            historial.setPedido(pedido);
+            historial.setUsuario(pedido.getComprador());
+            historial.setVideojuego(item.getVideojuego());
+            historial.setCantidad(item.getCantidad());
+            historial.setPrecioUnitario(item.getPrecio());
+            historial.setPrecioTotal(item.getPrecio() * item.getCantidad());
+            historial.setFecha(LocalDateTime.now());
+
+            historialPedidosRepository.save(historial);
+        }
+
+        return pedido;
     }
 
     @Transactional

@@ -30,6 +30,9 @@ public class Pedido {
     @JsonBackReference
     private Usuario comprador;
 
+    @OneToMany(mappedBy="pedido", cascade= CascadeType.ALL)
+    private List<HistorialPedidos> historialPedidos;
+
     @ManyToOne
     @JoinColumn(name = "metodo_pago_id")
     private MetodoPago metodoPago;
