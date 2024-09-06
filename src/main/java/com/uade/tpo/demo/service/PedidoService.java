@@ -12,6 +12,8 @@ import com.uade.tpo.demo.entity.ItemPedido;
 import com.uade.tpo.demo.entity.MetodoPago;
 import com.uade.tpo.demo.entity.Pedido;
 import com.uade.tpo.demo.entity.Usuario;
+import com.uade.tpo.demo.entity.Videojuego;
+import com.uade.tpo.demo.exception.InsufficientStockException;
 import com.uade.tpo.demo.entity.Pedido.EstadoPedido;
 import com.uade.tpo.demo.repository.PedidoRepository;
 import com.uade.tpo.demo.repository.MetodoPagoRepository;
@@ -30,12 +32,29 @@ public class PedidoService {
     @Autowired
     private CarritoService carritoService;
 
-    @Transactional
+    @Autowired
+    private VideojuegoService videojuegoService;
+
+     @Transactional
     public Pedido crearPedido(Carrito carrito, Usuario usuario) {
         Pedido pedido = new Pedido();
         pedido.setComprador(usuario);
         pedido.setFecha(LocalDateTime.now());
-        pedido.setEstado(EstadoPedido.PENDIENTE);
+        pedido.setEstado(Pedido.EstadoPedido.PENDIENTE);
+
+        // Verificar el stock de cada videojuego
+        carrito.getItems().forEach(itemCarrito -> {
+            Videojuego videojuego = itemCarrito.getVideojuego();
+            if (videojuego.getStock() < itemCarrito.getCantidad()) {
+                throw new InsufficientStockException("No hay suficiente stock para el videojuego: " + videojuego.getTitulo());
+            }
+        });
+
+        // Disminuir el stock si hay suficiente
+        carrito.getItems().forEach(itemCarrito -> {
+            Videojuego videojuego = itemCarrito.getVideojuego();
+            videojuegoService.disminuirStock(videojuego.getId(), itemCarrito.getCantidad());
+        });
 
         List<ItemPedido> items = carrito.getItems().stream()
             .map(itemCarrito -> {
@@ -51,9 +70,11 @@ public class PedidoService {
             .mapToDouble(item -> item.getPrecio() * item.getCantidad()).sum());
 
         Pedido nuevoPedido = pedidoRepository.save(pedido);
-        carritoService.vaciarCarrito(carrito);
+        carritoService.vaciarCarrito(carrito); 
+
         return nuevoPedido;
     }
+
 
     @Transactional
     public Pedido pagarPedido(Long pedidoId, Long metodoPagoId) {

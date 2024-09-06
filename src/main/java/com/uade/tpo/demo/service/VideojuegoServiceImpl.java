@@ -66,7 +66,7 @@ public class VideojuegoServiceImpl implements VideojuegoService {
         }
         videojuego.setStock(videojuego.getStock() - cantidad);
         return videojuegoRepository.save(videojuego);
-    }
+    }    
 
     @Override
     public List<Videojuego> buscarPorTitulo(String titulo) {

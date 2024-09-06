@@ -49,4 +49,12 @@ public class Videojuego {
         VR,
         EDUCATIVO,
     }
+
+    public enum Plataforma {
+        XBOX,
+        PC,
+        NINTENDO_SWITCH,
+        PLAY_STATION
+    }
+    
 }

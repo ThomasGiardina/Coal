@@ -5,13 +5,16 @@ import com.uade.tpo.demo.entity.Carrito;
 import com.uade.tpo.demo.entity.Pedido;
 import com.uade.tpo.demo.entity.Usuario;
 import com.uade.tpo.demo.entity.Videojuego;
+import com.uade.tpo.demo.exception.InsufficientStockException;
 import com.uade.tpo.demo.service.CarritoService;
 import com.uade.tpo.demo.service.PedidoService;
 import com.uade.tpo.demo.service.VideojuegoService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.http.HttpStatus;
 
 @RestController
 @RequestMapping("/carritos")
@@ -57,7 +60,18 @@ public class CarritoController {
 
         Usuario usuario = carrito.getUsuario(); 
         Pedido pedido = pedidoService.crearPedido(carrito, usuario);
-        carritoService.vaciarCarrito(carrito);
+
+        // Restar la cantidad de videojuegos del stock
+        carrito.getItems().forEach(item -> {
+            Videojuego videojuego = item.getVideojuego();
+            if (videojuego.getStock() < item.getCantidad()) {
+                throw new InsufficientStockException("Stock insuficiente para el videojuego: " + videojuego.getTitulo());
+            }
+            videojuego.setStock(videojuego.getStock() - item.getCantidad());
+            videojuegoService.actualizarVideojuego(videojuego.getId(), videojuego);
+        });
+
+        carritoService.vaciarCarrito(carrito); // Vaciar el carrito después de confirmar la compra
 
         return ResponseEntity.ok(pedido);
     }
