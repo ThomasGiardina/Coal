@@ -1,5 +1,7 @@
 package com.uade.tpo.demo.controllers;
 
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -30,5 +32,10 @@ public class HistorialPedidosController {
     @PostMapping
     public HistorialPedidos saveHistorial(@RequestBody HistorialPedidos historialPedidos) {
         return historialPedidosService.saveHistorial(historialPedidos);
+    }
+
+    @GetMapping("/usuario/{idUsuario}")
+    public List<HistorialPedidos> obtenerHistorialPorUsuarioId(@PathVariable Long idUsuario) {
+        return historialPedidosService.getHistorialPorUsuarioId(idUsuario);
     }
 }

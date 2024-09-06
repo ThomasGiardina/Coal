@@ -26,6 +26,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/v1/auth/**").permitAll()
                 .requestMatchers("/videojuegos/**").permitAll()
                 .requestMatchers("/carritos/**").permitAll()
+                .requestMatchers("/api/pedidos/**").authenticated()
                 .requestMatchers("/metodosPago/**").authenticated()
                 .anyRequest().authenticated())
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))

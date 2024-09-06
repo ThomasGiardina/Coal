@@ -1,5 +1,7 @@
 package com.uade.tpo.demo.service;
 
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import com.uade.tpo.demo.entity.HistorialPedidos;
@@ -20,5 +22,10 @@ public class HistorialPedidosService {
     @Transactional
     public HistorialPedidos getHistorialPorId(Long id) {
         return historialPedidosRepository.findById(id).orElse(null);
+    }
+
+    @Transactional
+    public List<HistorialPedidos> getHistorialPorUsuarioId(Long idUsuario) {
+        return historialPedidosRepository.findByUsuario_Id(idUsuario);
     }
 }
