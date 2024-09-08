@@ -7,7 +7,9 @@ import com.uade.tpo.demo.service.VideojuegoService;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -61,6 +63,12 @@ public class VideojuegoController {
     public ResponseEntity<Void> eliminarVideojuego(@PathVariable Long id) {
         videojuegoService.eliminarVideojuego(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/{id}/foto")
+    public ResponseEntity<VideojuegoDTO> subirFoto(@PathVariable Long id, @RequestParam("foto") MultipartFile foto) throws IOException {
+        Videojuego videojuego = videojuegoService.subirFoto(id, foto);
+        return ResponseEntity.ok(convertirADTO(videojuego));
     }
 
     // Agregar stock a un videojuego
@@ -119,6 +127,7 @@ public class VideojuegoController {
         dto.setPlataforma(videojuego.getPlataforma());
         dto.setCategoria(videojuego.getCategoria());
         dto.setStock(videojuego.getStock());
+        dto.setFotoUrl(videojuego.getFotoUrl());
         return dto;
     }
 
@@ -131,6 +140,7 @@ public class VideojuegoController {
         videojuego.setPlataforma(dto.getPlataforma());
         videojuego.setCategoria(dto.getCategoria());
         videojuego.setStock(dto.getStock());
+        videojuego.setFotoUrl(dto.getFotoUrl());
         return videojuego;
     }
 }

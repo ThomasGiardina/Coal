@@ -37,6 +37,9 @@ public class Videojuego {
     @Column(nullable = false)
     private Integer stock;
 
+    @Column(nullable = true)
+    private String fotoUrl;
+
     public enum CategoriaJuego{
         ACCION,
         AVENTURA,

@@ -30,6 +30,7 @@ public class SecurityConfig {
                 .requestMatchers("/metodosPago/**").authenticated()
                 .requestMatchers("/error").permitAll()
                 .requestMatchers("/Historial/**").permitAll()
+                .requestMatchers("/fotos/**").permitAll()
                 .anyRequest().authenticated())
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);

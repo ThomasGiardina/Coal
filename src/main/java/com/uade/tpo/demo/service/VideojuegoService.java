@@ -3,7 +3,9 @@ package com.uade.tpo.demo.service;
 import com.uade.tpo.demo.entity.Videojuego;
 import com.uade.tpo.demo.entity.Videojuego.CategoriaJuego;
 import com.uade.tpo.demo.exception.VideojuegoNotFoundException;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
 
 public interface VideojuegoService {
@@ -19,4 +21,5 @@ public interface VideojuegoService {
     List<Videojuego> buscarPorRangoDePrecio(Double minPrecio, Double maxPrecio);
     List<Videojuego> buscarPorDescripcion(String keyword);
     List<Videojuego> buscarPorCategoria(CategoriaJuego categoria);
+    Videojuego subirFoto(Long videojuegoId, MultipartFile foto) throws IOException, VideojuegoNotFoundException;
 }

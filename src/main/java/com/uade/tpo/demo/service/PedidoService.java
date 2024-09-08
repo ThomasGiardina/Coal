@@ -8,7 +8,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.uade.tpo.demo.entity.Carrito;
-import com.uade.tpo.demo.entity.HistorialPedidos;
 import com.uade.tpo.demo.entity.ItemPedido;
 import com.uade.tpo.demo.entity.MetodoPago;
 import com.uade.tpo.demo.entity.Pedido;
@@ -17,7 +16,6 @@ import com.uade.tpo.demo.entity.Videojuego;
 import com.uade.tpo.demo.exception.InsufficientStockException;
 import com.uade.tpo.demo.entity.Pedido.EstadoPedido;
 import com.uade.tpo.demo.repository.PedidoRepository;
-import com.uade.tpo.demo.repository.HistorialPedidosRepository;
 import com.uade.tpo.demo.repository.MetodoPagoRepository;
 
 import jakarta.transaction.Transactional;
@@ -27,9 +25,6 @@ public class PedidoService {
 
     @Autowired
     private PedidoRepository pedidoRepository;
-
-    @Autowired
-    private HistorialPedidosRepository historialPedidosRepository;
 
     @Autowired
     private MetodoPagoRepository metodoPagoRepository;
@@ -100,20 +95,6 @@ public class PedidoService {
             pedido.setMetodoPago(metodoPago);
             pedido.setEstado(EstadoPedido.CONFIRMADO);
             pedidoRepository.save(pedido);
-    
-            // Registrar cada videojuego en el historial
-            for (ItemPedido item : pedido.getProductosAdquiridos()) {
-                HistorialPedidos historial = new HistorialPedidos();
-                historial.setPedido(pedido);
-                historial.setUsuario(pedido.getComprador());
-                historial.setVideojuego(item.getVideojuego());
-                historial.setCantidad(item.getCantidad());
-                historial.setPrecioUnitario(item.getPrecio());
-                historial.setPrecioTotal(item.getPrecio() * item.getCantidad());
-                historial.setFecha(LocalDateTime.now());
-    
-                historialPedidosRepository.save(historial);
-            }
     
             return pedido;
     

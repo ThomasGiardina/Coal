@@ -13,4 +13,5 @@ public class VideojuegoDTO {
     private String plataforma;
     private CategoriaJuego categoria;
     private Integer stock;
+    private String fotoUrl;
 }

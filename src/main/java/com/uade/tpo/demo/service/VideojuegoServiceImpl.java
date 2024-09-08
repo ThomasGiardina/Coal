@@ -6,7 +6,13 @@ import com.uade.tpo.demo.exception.VideojuegoNotFoundException;
 import com.uade.tpo.demo.repository.VideojuegoRepository;
 
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 
 @Service
@@ -91,4 +97,24 @@ public class VideojuegoServiceImpl implements VideojuegoService {
     public List<Videojuego> buscarPorCategoria(CategoriaJuego categoria) {
         return videojuegoRepository.findByCategoria(categoria);
     }
+
+    @Override
+    public Videojuego subirFoto(Long videojuegoId, MultipartFile foto) throws IOException, VideojuegoNotFoundException {
+        Videojuego videojuego = obtenerVideojuegoPorId(videojuegoId);
+        String fotoUrl = guardarFoto(foto);
+        videojuego.setFotoUrl(fotoUrl);
+        return videojuegoRepository.save(videojuego);
+    }
+
+    private String guardarFoto(MultipartFile foto) throws IOException {
+    String folder = "fotos/";
+    File directory = new File(folder);
+    if (!directory.exists()) {
+        directory.mkdirs(); // Crear el directorio si no existe
+    }
+    byte[] bytes = foto.getBytes();
+    Path path = Paths.get(folder + foto.getOriginalFilename());
+    Files.write(path, bytes);
+    return path.toString();
+}
 }
