@@ -48,6 +48,9 @@ public class Usuario implements UserDetails, Serializable {
     @Column(nullable = false)
     private String lastName;
 
+    @Column(nullable = false, unique = true)
+    private String username;
+
     @JsonIgnore
     @Column(nullable = false)
     private String password;
@@ -65,14 +68,16 @@ public class Usuario implements UserDetails, Serializable {
     private Carrito carrito;
 
     @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference
     private List<MetodoPago> metodosPago;
 
     // Getters y Setters adicionales, si es necesario
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return List.of(new SimpleGrantedAuthority(role.name()));
+        return List.of(new SimpleGrantedAuthority("ROLE_" + role.name()));
     }
+
 
     @Override
     public String getUsername() {
@@ -97,6 +102,10 @@ public class Usuario implements UserDetails, Serializable {
     @Override
     public boolean isEnabled() {
         return true;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
     }
 
     // Métodos adicionales relacionados con el Carrito, si son necesarios

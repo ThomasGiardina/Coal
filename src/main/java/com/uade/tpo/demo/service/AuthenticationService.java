@@ -28,6 +28,7 @@ public class AuthenticationService {
     public AuthenticationResponse register(RegisterRequest request) {
         // Crear y guardar el usuario
         var user = Usuario.builder()
+                .username(request.getUsername())
                 .firstName(request.getFirstname())
                 .lastName(request.getLastname())
                 .email(request.getEmail())

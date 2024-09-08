@@ -18,19 +18,20 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
             .csrf(AbstractHttpConfigurer::disable)
             .authorizeHttpRequests(req -> req
                 .requestMatchers("/api/v1/auth/**").permitAll()
-                .requestMatchers("/videojuegos/**").permitAll()
-                .requestMatchers("/carritos/**").permitAll()
-                .requestMatchers("/api/pedidos/**").authenticated()
-                .requestMatchers("/metodosPago/**").authenticated()
+                .requestMatchers("/videojuegos/**").hasRole("ADMIN")
+                .requestMatchers("/carritos/**").hasAnyRole("ADMIN", "USER")
+                .requestMatchers("/api/pedidos/**").hasAnyRole("ADMIN", "USER")
+                .requestMatchers("/metodosPago/**").hasRole("USER")
                 .requestMatchers("/error").permitAll()
-                .requestMatchers("/Historial/**").permitAll()
-                .requestMatchers("/fotos/**").permitAll()
+                .requestMatchers("/Historial/**").hasAnyRole("ADMIN", "USER")
+                .requestMatchers("/fotos/**").hasRole("ADMIN")
                 .anyRequest().authenticated())
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);

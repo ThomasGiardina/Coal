@@ -1,11 +1,16 @@
 package com.uade.tpo.demo.controllers;
 
 import com.uade.tpo.demo.dto.VideojuegoDTO;
+import com.uade.tpo.demo.entity.Usuario;
 import com.uade.tpo.demo.entity.Videojuego;
 import com.uade.tpo.demo.entity.Videojuego.CategoriaJuego;
 import com.uade.tpo.demo.service.VideojuegoService;
+import com.uade.tpo.demo.repository.UserRepository;
+import com.uade.tpo.demo.controllers.config.JwtService;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -13,21 +18,40 @@ import java.io.IOException;
 import java.util.List;
 import java.util.stream.Collectors;
 
-
 @RestController
 @RequestMapping("/videojuegos")
 public class VideojuegoController {
 
     private final VideojuegoService videojuegoService;
+    private final UserRepository userRepository;  // Inyectar UserRepository
+    private final JwtService jwtService;  // Inyección de JwtService
 
-    // Inyección de dependencias a través del constructor
-    public VideojuegoController(VideojuegoService videojuegoService) {
+    @Autowired
+    public VideojuegoController(VideojuegoService videojuegoService, UserRepository userRepository, JwtService jwtService) {
         this.videojuegoService = videojuegoService;
+        this.userRepository = userRepository;
+        this.jwtService = jwtService;  // Inicialización de JwtService
     }
 
     // Crear un nuevo videojuego
     @PostMapping
-    public ResponseEntity<VideojuegoDTO> crearVideojuego(@RequestBody VideojuegoDTO videojuegoDTO) {
+    public ResponseEntity<VideojuegoDTO> crearVideojuego(@RequestHeader("Authorization") String token, @RequestBody VideojuegoDTO videojuegoDTO) {
+        // Extraer el token JWT del header "Authorization"
+        String jwt = token.substring(7); // Remover "Bearer " del token
+
+        // Usar JwtService para obtener el email del usuario desde el token
+        String userEmail = jwtService.extractUsername(jwt);
+
+        // Buscar el usuario en la base de datos por su email
+        Usuario usuario = userRepository.findByEmail(userEmail)
+                            .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado"));
+
+        // Verificar que el usuario tenga el rol ADMIN
+        if (!usuario.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_ADMIN"))) {
+            return ResponseEntity.status(403).build(); // Forbidden
+        }
+
+        // Convertir y guardar el videojuego
         Videojuego videojuego = convertirAEntidad(videojuegoDTO);
         Videojuego videojuegoGuardado = videojuegoService.crearVideojuego(videojuego);
         return ResponseEntity.ok(convertirADTO(videojuegoGuardado));
@@ -105,7 +129,6 @@ public class VideojuegoController {
         return ResponseEntity.ok(videojuegosDTO);
     }
 
-
     @GetMapping("/buscarPorCategoria")
     public ResponseEntity<List<VideojuegoDTO>> buscarPorCategoria(@RequestParam CategoriaJuego categoria) {
         List<Videojuego> videojuegos = videojuegoService.buscarPorCategoria(categoria);
@@ -114,7 +137,6 @@ public class VideojuegoController {
                 .collect(Collectors.toList());
         return ResponseEntity.ok(videojuegosDTO);
     }
-
 
     // Métodos de utilidad para convertir entre DTO y Entidad
 
