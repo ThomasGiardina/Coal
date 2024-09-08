@@ -19,6 +19,11 @@ public class MetodoPagoServiceImpl implements MetodoPagoService {
 
     @Override
     public MetodoPago crearMetodoPago(MetodoPago metodoPago) {
+        if (metodoPago.getTipoPago() == MetodoPago.TipoPago.CREDITO || metodoPago.getTipoPago() == MetodoPago.TipoPago.DEBITO) {
+            if (metodoPago.getNumeroTarjeta() == null || metodoPago.getCodigoSeguridad() == null || metodoPago.getFechaVencimiento() == null) {
+                throw new IllegalArgumentException("Los datos de la tarjeta son obligatorios para pagos con CREDITO o DEBITO.");
+            }
+        }
         return metodoPagoRepository.save(metodoPago);
     }
 
@@ -37,10 +42,22 @@ public class MetodoPagoServiceImpl implements MetodoPagoService {
     public MetodoPago actualizarMetodoPago(Long metodoPagoId, MetodoPago datosActualizados) throws MetodoPagoNotFoundException {
         MetodoPago metodoPago = obtenerMetodoPagoPorId(metodoPagoId);
         metodoPago.setNombrePropietario(datosActualizados.getNombrePropietario());
-        metodoPago.setNumeroTarjeta(datosActualizados.getNumeroTarjeta());
-        metodoPago.setCodigoSeguridad(datosActualizados.getCodigoSeguridad());
-        metodoPago.setFechaVencimiento(datosActualizados.getFechaVencimiento());
         metodoPago.setDireccion(datosActualizados.getDireccion());
+        metodoPago.setTipoPago(datosActualizados.getTipoPago());
+
+        if (metodoPago.getTipoPago() == MetodoPago.TipoPago.CREDITO || metodoPago.getTipoPago() == MetodoPago.TipoPago.DEBITO) {
+            if (datosActualizados.getNumeroTarjeta() == null || datosActualizados.getCodigoSeguridad() == null || datosActualizados.getFechaVencimiento() == null) {
+                throw new IllegalArgumentException("Los datos de la tarjeta son obligatorios para pagos con CREDITO o DEBITO.");
+            }
+            metodoPago.setNumeroTarjeta(datosActualizados.getNumeroTarjeta());
+            metodoPago.setCodigoSeguridad(datosActualizados.getCodigoSeguridad());
+            metodoPago.setFechaVencimiento(datosActualizados.getFechaVencimiento());
+        } else {
+            metodoPago.setNumeroTarjeta(null);
+            metodoPago.setCodigoSeguridad(null);
+            metodoPago.setFechaVencimiento(null);
+        }
+
         return metodoPagoRepository.save(metodoPago);
     }
 

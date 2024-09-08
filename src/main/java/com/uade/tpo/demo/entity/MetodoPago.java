@@ -10,6 +10,12 @@ import com.fasterxml.jackson.annotation.JsonBackReference;
 @Entity
 public class MetodoPago {
 
+    public enum TipoPago {
+        EFECTIVO,
+        DEBITO,
+        CREDITO
+    }
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -17,14 +23,11 @@ public class MetodoPago {
     @Column(nullable = false)
     private String nombrePropietario;
 
-    @Column(nullable = false)
     private String numeroTarjeta;
 
-    @Column(nullable = false)
     private String codigoSeguridad;
 
     @Temporal(TemporalType.DATE)
-    @Column(nullable = false)
     private Date fechaVencimiento;
 
     @Column(nullable = false)
@@ -34,4 +37,8 @@ public class MetodoPago {
     @JoinColumn(name = "id_usuario", nullable = false)
     @JsonBackReference
     private Usuario usuario;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private TipoPago tipoPago; 
 }

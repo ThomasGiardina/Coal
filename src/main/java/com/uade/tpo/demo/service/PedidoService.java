@@ -80,26 +80,46 @@ public class PedidoService {
         try {
             Pedido pedido = pedidoRepository.findById(pedidoId)
                 .orElseThrow(() -> new RuntimeException("Pedido no encontrado"));
-    
+
             if (pedido.getEstado() != EstadoPedido.PENDIENTE) {
                 throw new RuntimeException("El pedido no está en estado pendiente");
             }
-    
+
             if (metodoPagoId == null) {
                 throw new RuntimeException("Debe seleccionar un método de pago antes de proceder con el pago.");
             }
-    
+
             MetodoPago metodoPago = metodoPagoRepository.findById(metodoPagoId)
                 .orElseThrow(() -> new RuntimeException("Método de pago no encontrado"));
-    
+
+            switch (metodoPago.getTipoPago()) {
+                case EFECTIVO:
+                    pedido.setMontoTotal(pedido.getMontoTotal() * 0.85); 
+                    break;
+                case DEBITO:
+                    pedido.setMontoTotal(pedido.getMontoTotal() * 0.90); 
+                    validarDatosTarjeta(metodoPago); 
+                    break;
+                case CREDITO:
+                    validarDatosTarjeta(metodoPago);  
+                    break;
+                default:
+                    throw new RuntimeException("Tipo de pago no soportado");
+            }
+
             pedido.setMetodoPago(metodoPago);
             pedido.setEstado(EstadoPedido.CONFIRMADO);
             pedidoRepository.save(pedido);
-    
+
             return pedido;
-    
+
         } catch (Exception e) {
             throw new RuntimeException("Error al procesar el pago: " + e.getMessage());
+        }
+    }
+    private void validarDatosTarjeta(MetodoPago metodoPago) {
+        if (metodoPago.getNumeroTarjeta() == null || metodoPago.getCodigoSeguridad() == null || metodoPago.getFechaVencimiento() == null) {
+            throw new RuntimeException("Los datos de la tarjeta son obligatorios para el tipo de pago seleccionado.");
         }
     }
 
