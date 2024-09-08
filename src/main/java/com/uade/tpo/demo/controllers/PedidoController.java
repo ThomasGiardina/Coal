@@ -7,6 +7,8 @@ import org.springframework.web.bind.annotation.*;
 import com.uade.tpo.demo.entity.Pedido;
 import com.uade.tpo.demo.service.PedidoService;
 
+import java.util.Map; // Importación necesaria
+
 @RestController
 @RequestMapping("/api/pedidos")
 public class PedidoController {
@@ -15,7 +17,9 @@ public class PedidoController {
     private PedidoService pedidoService;
 
     @PostMapping("/{pedidoId}/pagar")
-    public ResponseEntity<Pedido> pagarPedido(@PathVariable Long pedidoId, @RequestBody Long metodoPagoId) {
+    public ResponseEntity<Pedido> pagarPedido(@PathVariable Long pedidoId, @RequestBody Map<String, Long> request) {
+        Long metodoPagoId = request.get("metodoPagoId");
+        System.out.println("Método de pago ID: " + metodoPagoId); // Log para verificar
         Pedido pedido = pedidoService.pagarPedido(pedidoId, metodoPagoId);
         return ResponseEntity.ok(pedido);
     }

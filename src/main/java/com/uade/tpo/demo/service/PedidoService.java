@@ -47,7 +47,7 @@ public class PedidoService {
         pedido.setFecha(LocalDateTime.now());
         pedido.setEstado(Pedido.EstadoPedido.PENDIENTE);
 
-        // Verificar el stock de cada videojuego
+
         carrito.getItems().forEach(itemCarrito -> {
             Videojuego videojuego = itemCarrito.getVideojuego();
             if (videojuego.getStock() < itemCarrito.getCantidad()) {
@@ -55,7 +55,7 @@ public class PedidoService {
             }
         });
 
-        // Disminuir el stock si hay suficiente
+
         carrito.getItems().forEach(itemCarrito -> {
             Videojuego videojuego = itemCarrito.getVideojuego();
             videojuegoService.disminuirStock(videojuego.getId(), itemCarrito.getCantidad());
@@ -80,42 +80,46 @@ public class PedidoService {
         return nuevoPedido;
     }
 
-    @Transactional
+    @Transactional(rollbackOn = Exception.class)
     public Pedido pagarPedido(Long pedidoId, Long metodoPagoId) {
-        Pedido pedido = pedidoRepository.findById(pedidoId)
-            .orElseThrow(() -> new RuntimeException("Pedido no encontrado"));
-
-        if (pedido.getEstado() != EstadoPedido.PENDIENTE) {
-            throw new RuntimeException("El pedido no está en estado pendiente");
+        try {
+            Pedido pedido = pedidoRepository.findById(pedidoId)
+                .orElseThrow(() -> new RuntimeException("Pedido no encontrado"));
+    
+            if (pedido.getEstado() != EstadoPedido.PENDIENTE) {
+                throw new RuntimeException("El pedido no está en estado pendiente");
+            }
+    
+            if (metodoPagoId == null) {
+                throw new RuntimeException("Debe seleccionar un método de pago antes de proceder con el pago.");
+            }
+    
+            MetodoPago metodoPago = metodoPagoRepository.findById(metodoPagoId)
+                .orElseThrow(() -> new RuntimeException("Método de pago no encontrado"));
+    
+            pedido.setMetodoPago(metodoPago);
+            pedido.setEstado(EstadoPedido.CONFIRMADO);
+            pedidoRepository.save(pedido);
+    
+            // Registrar cada videojuego en el historial
+            for (ItemPedido item : pedido.getProductosAdquiridos()) {
+                HistorialPedidos historial = new HistorialPedidos();
+                historial.setPedido(pedido);
+                historial.setUsuario(pedido.getComprador());
+                historial.setVideojuego(item.getVideojuego());
+                historial.setCantidad(item.getCantidad());
+                historial.setPrecioUnitario(item.getPrecio());
+                historial.setPrecioTotal(item.getPrecio() * item.getCantidad());
+                historial.setFecha(LocalDateTime.now());
+    
+                historialPedidosRepository.save(historial);
+            }
+    
+            return pedido;
+    
+        } catch (Exception e) {
+            throw new RuntimeException("Error al procesar el pago: " + e.getMessage());
         }
-
-        if (metodoPagoId == null) {
-            throw new RuntimeException("Debe seleccionar un método de pago antes de proceder con el pago.");
-        }
-
-        // Obtener el método de pago seleccionado y asignarlo al pedido
-        MetodoPago metodoPago = metodoPagoRepository.findById(metodoPagoId)
-            .orElseThrow(() -> new RuntimeException("Método de pago no encontrado"));
-
-        pedido.setMetodoPago(metodoPago);
-        pedido.setEstado(EstadoPedido.CONFIRMADO);
-        pedidoRepository.save(pedido);
-
-        // Registrar cada videojuego en el historial
-        for (ItemPedido item : pedido.getProductosAdquiridos()) {
-            HistorialPedidos historial = new HistorialPedidos();
-            historial.setPedido(pedido);
-            historial.setUsuario(pedido.getComprador());
-            historial.setVideojuego(item.getVideojuego());
-            historial.setCantidad(item.getCantidad());
-            historial.setPrecioUnitario(item.getPrecio());
-            historial.setPrecioTotal(item.getPrecio() * item.getCantidad());
-            historial.setFecha(LocalDateTime.now());
-
-            historialPedidosRepository.save(historial);
-        }
-
-        return pedido;
     }
 
     @Transactional

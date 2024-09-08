@@ -52,8 +52,6 @@ public class Pedido {
     public enum EstadoPedido {
         PENDIENTE,
         CONFIRMADO,
-        ENVIADO,
-        ENTREGADO,
         CANCELADO
     }
 }

@@ -28,6 +28,8 @@ public class SecurityConfig {
                 .requestMatchers("/carritos/**").permitAll()
                 .requestMatchers("/api/pedidos/**").authenticated()
                 .requestMatchers("/metodosPago/**").authenticated()
+                .requestMatchers("/error").permitAll()
+                .requestMatchers("/Historial/**").permitAll()
                 .anyRequest().authenticated())
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
