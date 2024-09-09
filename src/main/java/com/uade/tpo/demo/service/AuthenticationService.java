@@ -10,9 +10,11 @@ import com.uade.tpo.demo.controllers.auth.AuthenticationResponse;
 import com.uade.tpo.demo.controllers.auth.RegisterRequest;
 import com.uade.tpo.demo.controllers.config.JwtService;
 import com.uade.tpo.demo.entity.Carrito;
+import com.uade.tpo.demo.entity.HistorialPedidos;
 import com.uade.tpo.demo.entity.Usuario;
 import com.uade.tpo.demo.repository.UserRepository;
 import com.uade.tpo.demo.repository.CarritoRepository;
+import com.uade.tpo.demo.repository.HistorialPedidosRepository;
 
 import lombok.RequiredArgsConstructor;
 
@@ -24,6 +26,7 @@ public class AuthenticationService {
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
+    private final HistorialPedidosRepository historialPedidosRepository;
 
     public AuthenticationResponse register(RegisterRequest request) {
         // Crear y guardar el usuario
@@ -42,6 +45,10 @@ public class AuthenticationService {
         // Crear y asociar el carrito
         Carrito carrito = new Carrito();
         carrito.setUsuario(savedUser);
+
+        HistorialPedidos historialPedidos = new HistorialPedidos();
+        historialPedidos.setUsuario(savedUser);
+        historialPedidosRepository.save(historialPedidos);
 
         // Guarda el carrito en la base de datos
         carritoRepository.save(carrito);
