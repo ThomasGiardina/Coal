@@ -20,4 +20,8 @@ public class EventosHistorialService {
     public EventosHistorial registrarEvento(EventosHistorial evento) {
         return eventosHistorialRepository.save(evento);
     }
+
+    public List<EventosHistorial> obtenerTodosLosEventos() {
+        return eventosHistorialRepository.findAll();  
+    }
 }

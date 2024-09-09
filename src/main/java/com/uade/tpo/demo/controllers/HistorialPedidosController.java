@@ -33,19 +33,28 @@ public class HistorialPedidosController {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String emailUsuarioLogueado = authentication.getName();  // Se asume que el username es el email
 
-        // Obtener el ID del usuario logueado
-        Long usuarioId = historialPedidosService.obtenerIdUsuarioPorEmail(emailUsuarioLogueado);
+        // Verificar si el usuario autenticado tiene el rol de ADMIN
+        boolean esAdmin = authentication.getAuthorities().stream()
+                .anyMatch(grantedAuthority -> grantedAuthority.getAuthority().equals("ROLE_ADMIN"));
 
-        // Buscar el historial por el ID del usuario
-        HistorialPedidos historial = historialPedidosService.obtenerHistorialPorUsuario(usuarioId);
+        List<EventosHistorialDTO> eventosDTOs;
 
-        // Obtener los eventos asociados al historial
-        List<EventosHistorial> eventos = eventosHistorialService.obtenerEventosPorHistorialId(historial.getId());
-        List<EventosHistorialDTO> eventosDTOs = eventos.stream()
-            .map(this::convertirAEventosHistorialDTO)
-            .collect(Collectors.toList());
+        if (esAdmin) {
+            // Si el usuario es admin, obtener todos los eventos de todos los historiales
+            List<EventosHistorial> eventos = eventosHistorialService.obtenerTodosLosEventos();
+            eventosDTOs = eventos.stream()
+                .map(this::convertirAEventosHistorialDTO)
+                .collect(Collectors.toList());
+        } else {
+            // Si el usuario no es admin, obtener el historial solo del usuario logueado
+            Long usuarioId = historialPedidosService.obtenerIdUsuarioPorEmail(emailUsuarioLogueado);
+            HistorialPedidos historial = historialPedidosService.obtenerHistorialPorUsuario(usuarioId);
+            List<EventosHistorial> eventos = eventosHistorialService.obtenerEventosPorHistorialId(historial.getId());
+            eventosDTOs = eventos.stream()
+                .map(this::convertirAEventosHistorialDTO)
+                .collect(Collectors.toList());
+        }
 
-        // Devolver los eventos asociados en el ResponseEntity
         return ResponseEntity.ok(eventosDTOs);
     }
 
