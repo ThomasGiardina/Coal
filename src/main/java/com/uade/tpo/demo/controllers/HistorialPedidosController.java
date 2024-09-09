@@ -31,15 +31,6 @@ public class HistorialPedidosController {
         return ResponseEntity.ok(historialDTO);
     }
 
-    @GetMapping("/usuario/{usuarioId}")
-    public ResponseEntity<HistorialPedidosDTO> obtenerHistorialPorUsuario(@PathVariable Long usuarioId) {
-        HistorialPedidos historial = historialPedidosService.obtenerHistorialPorUsuario(usuarioId);
-        
-        HistorialPedidosDTO historialDTO = convertirAHistorialPedidosDTO(historial);
-        
-        return ResponseEntity.ok(historialDTO);
-    }
-
     @GetMapping("/{historialId}/eventos")
     public ResponseEntity<List<EventosHistorialDTO>> obtenerEventosPorHistorialId(@PathVariable Long historialId) {
         List<EventosHistorial> eventos = eventosHistorialService.obtenerEventosPorHistorialId(historialId);
