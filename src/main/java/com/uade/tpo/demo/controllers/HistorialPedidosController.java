@@ -9,7 +9,10 @@ import com.uade.tpo.demo.service.HistorialPedidosService;
 import com.uade.tpo.demo.service.EventosHistorialService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -23,6 +26,28 @@ public class HistorialPedidosController {
 
     @Autowired
     private EventosHistorialService eventosHistorialService;
+
+    @GetMapping("/usuario")
+    public ResponseEntity<List<EventosHistorialDTO>> obtenerHistorialPorUsuario() {
+        // Obtener el usuario autenticado
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String emailUsuarioLogueado = authentication.getName();  // Se asume que el username es el email
+
+        // Obtener el ID del usuario logueado
+        Long usuarioId = historialPedidosService.obtenerIdUsuarioPorEmail(emailUsuarioLogueado);
+
+        // Buscar el historial por el ID del usuario
+        HistorialPedidos historial = historialPedidosService.obtenerHistorialPorUsuario(usuarioId);
+
+        // Obtener los eventos asociados al historial
+        List<EventosHistorial> eventos = eventosHistorialService.obtenerEventosPorHistorialId(historial.getId());
+        List<EventosHistorialDTO> eventosDTOs = eventos.stream()
+            .map(this::convertirAEventosHistorialDTO)
+            .collect(Collectors.toList());
+
+        // Devolver los eventos asociados en el ResponseEntity
+        return ResponseEntity.ok(eventosDTOs);
+    }
 
     @GetMapping("/{historialId}")
     public ResponseEntity<HistorialPedidosDTO> obtenerHistorialPorId(@PathVariable Long historialId) {
