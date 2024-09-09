@@ -12,7 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
+
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -29,29 +29,25 @@ public class HistorialPedidosController {
 
     @GetMapping("/usuario")
     public ResponseEntity<List<EventosHistorialDTO>> obtenerHistorialPorUsuario() {
-        // Obtener el usuario autenticado
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String emailUsuarioLogueado = authentication.getName();  // Se asume que el username es el email
+        String emailUsuarioLogueado = authentication.getName();  
 
-        // Verificar si el usuario autenticado tiene el rol de ADMIN
         boolean esAdmin = authentication.getAuthorities().stream()
                 .anyMatch(grantedAuthority -> grantedAuthority.getAuthority().equals("ROLE_ADMIN"));
 
         List<EventosHistorialDTO> eventosDTOs;
 
         if (esAdmin) {
-            // Si el usuario es admin, obtener todos los eventos de todos los historiales
             List<EventosHistorial> eventos = eventosHistorialService.obtenerTodosLosEventos();
             eventosDTOs = eventos.stream()
-                .map(this::convertirAEventosHistorialDTO)
+                .map(evento -> convertirAEventosHistorialDTO(evento, esAdmin))
                 .collect(Collectors.toList());
         } else {
-            // Si el usuario no es admin, obtener el historial solo del usuario logueado
             Long usuarioId = historialPedidosService.obtenerIdUsuarioPorEmail(emailUsuarioLogueado);
             HistorialPedidos historial = historialPedidosService.obtenerHistorialPorUsuario(usuarioId);
             List<EventosHistorial> eventos = eventosHistorialService.obtenerEventosPorHistorialId(historial.getId());
             eventosDTOs = eventos.stream()
-                .map(this::convertirAEventosHistorialDTO)
+                .map(evento -> convertirAEventosHistorialDTO(evento, esAdmin))
                 .collect(Collectors.toList());
         }
 
@@ -65,14 +61,6 @@ public class HistorialPedidosController {
         return ResponseEntity.ok(historialDTO);
     }
 
-    @GetMapping("/{historialId}/eventos")
-    public ResponseEntity<List<EventosHistorialDTO>> obtenerEventosPorHistorialId(@PathVariable Long historialId) {
-        List<EventosHistorial> eventos = eventosHistorialService.obtenerEventosPorHistorialId(historialId);
-        List<EventosHistorialDTO> eventosDTOs = eventos.stream()
-            .map(this::convertirAEventosHistorialDTO)
-            .collect(Collectors.toList());
-        return ResponseEntity.ok(eventosDTOs);
-    }
 
     private HistorialPedidosDTO convertirAHistorialPedidosDTO(HistorialPedidos historial) {
         HistorialPedidosDTO dto = new HistorialPedidosDTO();
@@ -82,26 +70,29 @@ public class HistorialPedidosController {
     }
 
 
-    private EventosHistorialDTO convertirAEventosHistorialDTO(EventosHistorial evento) {
+    private EventosHistorialDTO convertirAEventosHistorialDTO(EventosHistorial evento, boolean esAdmin) {
         EventosHistorialDTO dto = new EventosHistorialDTO();
-        
         dto.setId(evento.getId());
         dto.setPedidoId(evento.getPedido().getId());
         dto.setHistorialId(evento.getHistorial().getId());
         dto.setPrecioTotal(evento.getPrecioTotal());
         dto.setFechaEvento(evento.getFechaEvento());
-    
+
+        if (esAdmin) {
+            dto.setUsuarioId(evento.getHistorial().getUsuario().getId());  
+        }
+
         List<String> nombres = evento.getItems().stream()
-            .map(item -> item.getVideojuego().getTitulo())  
+            .map(item -> item.getVideojuego().getTitulo())
             .collect(Collectors.toList());
-    
+
         List<Double> precios = evento.getItems().stream()
-            .map(ItemPedido::getPrecio)  
+            .map(item -> item.getPrecio())
             .collect(Collectors.toList());
-    
+
         dto.setNombreJuegos(nombres);
         dto.setPrecios(precios);
-    
+
         return dto;
     }
 }

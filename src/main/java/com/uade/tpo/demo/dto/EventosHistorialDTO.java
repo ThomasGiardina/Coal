@@ -7,6 +7,7 @@ import java.util.List;
 @Data
 public class EventosHistorialDTO {
     private Long id;
+    private Long usuarioId;
     private Long pedidoId;
     private Long historialId;
     private double precioTotal;
