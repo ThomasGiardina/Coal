@@ -12,6 +12,10 @@ public class HistorialPedidosService {
     @Autowired
     private HistorialPedidosRepository historialPedidosRepository;
 
+    public HistorialPedidos obtenerHistorialPorUsuario(Long usuarioId) {
+        return historialPedidosRepository.findByUsuarioId(usuarioId).orElseThrow(() -> new RuntimeException("Historial no encontrado para el usuario con ID: " + usuarioId));
+    }
+
     public HistorialPedidos obtenerHistorialPedidosPorId(Long historialId) {
         return historialPedidosRepository.findById(historialId).orElseThrow(() -> new RuntimeException("Historial no encontrado con ID: " + historialId));
     }
