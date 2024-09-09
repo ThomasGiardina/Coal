@@ -125,20 +125,17 @@ public Pedido pagarPedido(Long pedidoId, Long metodoPagoId) {
         pedido.setEstado(EstadoPedido.CONFIRMADO);
         Pedido pedidoConfirmado = pedidoRepository.save(pedido);
 
-        // Obtener el historial del usuario
-        Long usuarioId = pedido.getComprador().getId();  // Asumo que pedido tiene el comprador
+        Long usuarioId = pedido.getComprador().getId();  
         HistorialPedidos historial = historialPedidosService.obtenerHistorialPorUsuario(usuarioId);
 
-        // Clonar los items para evitar referencias compartidas
         List<ItemPedido> itemsClonados = new ArrayList<>(pedido.getProductosAdquiridos());
 
-        // Registrar el evento de historial de pedidos
         EventosHistorial evento = new EventosHistorial();
-        evento.setHistorial(historial);  // Asignar el historial cargado
+        evento.setHistorial(historial);  
         evento.setPedido(pedidoConfirmado);
         evento.setFechaEvento(LocalDateTime.now());
         evento.setPrecioTotal(pedidoConfirmado.getMontoTotal());
-        evento.setItems(itemsClonados);  // Clonar los items para evitar referencias compartidas
+        evento.setItems(itemsClonados); 
 
         eventosHistorialRepository.save(evento);
 
