@@ -11,6 +11,7 @@ import com.uade.tpo.demo.controllers.auth.RegisterRequest;
 import com.uade.tpo.demo.controllers.config.JwtService;
 import com.uade.tpo.demo.entity.Carrito;
 import com.uade.tpo.demo.entity.HistorialPedidos;
+import com.uade.tpo.demo.entity.Rol;
 import com.uade.tpo.demo.entity.Usuario;
 import com.uade.tpo.demo.repository.UserRepository;
 import com.uade.tpo.demo.repository.CarritoRepository;
@@ -36,7 +37,7 @@ public class AuthenticationService {
                 .lastName(request.getLastname())
                 .email(request.getEmail())
                 .password(passwordEncoder.encode(request.getPassword()))
-                .role(request.getRole())
+                .role(Rol.USER)
                 .build();
 
         // Guarda el usuario primero
