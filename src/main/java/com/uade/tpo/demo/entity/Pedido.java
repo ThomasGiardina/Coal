@@ -31,7 +31,7 @@ public class Pedido {
     private Usuario comprador;
 
     @ManyToOne
-    @JoinColumn(name = "metodo_pago_id")
+    @JoinColumn(name = "metodo_pago_id", nullable = true)
     private MetodoPago metodoPago;
 
     private LocalDateTime fecha;

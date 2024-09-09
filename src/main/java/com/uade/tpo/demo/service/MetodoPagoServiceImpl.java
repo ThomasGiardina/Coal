@@ -1,9 +1,11 @@
 package com.uade.tpo.demo.service;
 
 import com.uade.tpo.demo.entity.MetodoPago;
+import com.uade.tpo.demo.entity.Pedido;
 import com.uade.tpo.demo.entity.Usuario;
 import com.uade.tpo.demo.exception.MetodoPagoNotFoundException;
 import com.uade.tpo.demo.repository.MetodoPagoRepository;
+import com.uade.tpo.demo.repository.PedidoRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -12,17 +14,17 @@ import java.util.List;
 public class MetodoPagoServiceImpl implements MetodoPagoService {
 
     private final MetodoPagoRepository metodoPagoRepository;
+    private final PedidoRepository pedidoRepository;
 
-    public MetodoPagoServiceImpl(MetodoPagoRepository metodoPagoRepository) {
+    public MetodoPagoServiceImpl(MetodoPagoRepository metodoPagoRepository, PedidoRepository pedidoRepository) {
         this.metodoPagoRepository = metodoPagoRepository;
+        this.pedidoRepository = pedidoRepository;
     }
 
     @Override
     public MetodoPago crearMetodoPago(MetodoPago metodoPago) {
         if (metodoPago.getTipoPago() == MetodoPago.TipoPago.CREDITO || metodoPago.getTipoPago() == MetodoPago.TipoPago.DEBITO) {
-            if (metodoPago.getNumeroTarjeta() == null || metodoPago.getCodigoSeguridad() == null || metodoPago.getFechaVencimiento() == null) {
-                throw new IllegalArgumentException("Los datos de la tarjeta son obligatorios para pagos con CREDITO o DEBITO.");
-            }
+            validarDatosTarjeta(metodoPago);
         }
         return metodoPagoRepository.save(metodoPago);
     }
@@ -46,9 +48,7 @@ public class MetodoPagoServiceImpl implements MetodoPagoService {
         metodoPago.setTipoPago(datosActualizados.getTipoPago());
 
         if (metodoPago.getTipoPago() == MetodoPago.TipoPago.CREDITO || metodoPago.getTipoPago() == MetodoPago.TipoPago.DEBITO) {
-            if (datosActualizados.getNumeroTarjeta() == null || datosActualizados.getCodigoSeguridad() == null || datosActualizados.getFechaVencimiento() == null) {
-                throw new IllegalArgumentException("Los datos de la tarjeta son obligatorios para pagos con CREDITO o DEBITO.");
-            }
+            validarDatosTarjeta(datosActualizados);
             metodoPago.setNumeroTarjeta(datosActualizados.getNumeroTarjeta());
             metodoPago.setCodigoSeguridad(datosActualizados.getCodigoSeguridad());
             metodoPago.setFechaVencimiento(datosActualizados.getFechaVencimiento());
@@ -70,5 +70,11 @@ public class MetodoPagoServiceImpl implements MetodoPagoService {
     @Override
     public List<MetodoPago> obtenerMetodosPagoPorUsuario(Usuario usuario) {
         return metodoPagoRepository.findAllByUsuario(usuario);
+    }
+
+    private void validarDatosTarjeta(MetodoPago metodoPago) {
+        if (metodoPago.getNumeroTarjeta() == null || metodoPago.getCodigoSeguridad() == null || metodoPago.getFechaVencimiento() == null) {
+            throw new IllegalArgumentException("Los datos de la tarjeta son obligatorios para pagos con CREDITO o DEBITO.");
+        }
     }
 }

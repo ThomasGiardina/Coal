@@ -56,14 +56,12 @@ public class PedidoService {
         pedido.setFecha(LocalDateTime.now());
         pedido.setEstado(Pedido.EstadoPedido.PENDIENTE);
 
-
         carrito.getItems().forEach(itemCarrito -> {
             Videojuego videojuego = itemCarrito.getVideojuego();
             if (videojuego.getStock() < itemCarrito.getCantidad()) {
                 throw new InsufficientStockException("No hay suficiente stock para el videojuego: " + videojuego.getTitulo());
             }
         });
-
 
         carrito.getItems().forEach(itemCarrito -> {
             Videojuego videojuego = itemCarrito.getVideojuego();
@@ -90,61 +88,110 @@ public class PedidoService {
     }
 
     @Transactional(rollbackOn = Exception.class)
-public Pedido pagarPedido(Long pedidoId, Long metodoPagoId) {
-    try {
-        Pedido pedido = pedidoRepository.findById(pedidoId)
-            .orElseThrow(() -> new RuntimeException("Pedido no encontrado"));
+    public Pedido pagarPedido(Long pedidoId, Long metodoPagoId) {
+        try {
+            Pedido pedido = pedidoRepository.findById(pedidoId)
+                .orElseThrow(() -> new RuntimeException("Pedido no encontrado"));
 
-        if (pedido.getEstado() != EstadoPedido.PENDIENTE) {
-            throw new RuntimeException("El pedido no está en estado pendiente");
+            if (pedido.getEstado() != EstadoPedido.PENDIENTE) {
+                throw new RuntimeException("El pedido no está en estado pendiente");
+            }
+
+            if (metodoPagoId == null) {
+                throw new RuntimeException("Debe seleccionar un método de pago antes de proceder con el pago.");
+            }
+
+            MetodoPago metodoPago = metodoPagoRepository.findById(metodoPagoId)
+                .orElseThrow(() -> new RuntimeException("Método de pago no encontrado"));
+
+            switch (metodoPago.getTipoPago()) {
+                case EFECTIVO:
+                    pedido.setMontoTotal(pedido.getMontoTotal() * 0.85);
+                    break;
+                case DEBITO:
+                    pedido.setMontoTotal(pedido.getMontoTotal() * 0.90);
+                    validarDatosTarjeta(metodoPago);
+                    break;
+                case CREDITO:
+                    validarDatosTarjeta(metodoPago);
+                    break;
+                default:
+                    throw new RuntimeException("Tipo de pago no soportado");
+            }
+
+            pedido.setMetodoPago(metodoPago);
+            pedido.setEstado(EstadoPedido.CONFIRMADO);
+            Pedido pedidoConfirmado = pedidoRepository.save(pedido);
+
+            Long usuarioId = pedido.getComprador().getId();  
+            HistorialPedidos historial = historialPedidosService.obtenerHistorialPorUsuario(usuarioId);
+
+            List<ItemPedido> itemsClonados = new ArrayList<>(pedido.getProductosAdquiridos());
+
+            EventosHistorial evento = new EventosHistorial();
+            evento.setHistorial(historial);  
+            evento.setPedido(pedidoConfirmado);
+            evento.setFechaEvento(LocalDateTime.now());
+            evento.setPrecioTotal(pedidoConfirmado.getMontoTotal());
+            evento.setItems(itemsClonados); 
+
+            eventosHistorialRepository.save(evento);
+
+            return pedidoConfirmado;
+
+        } catch (Exception e) {
+            throw new RuntimeException("Error al procesar el pago: " + e.getMessage());
         }
-
-        if (metodoPagoId == null) {
-            throw new RuntimeException("Debe seleccionar un método de pago antes de proceder con el pago.");
-        }
-
-        MetodoPago metodoPago = metodoPagoRepository.findById(metodoPagoId)
-            .orElseThrow(() -> new RuntimeException("Método de pago no encontrado"));
-
-        switch (metodoPago.getTipoPago()) {
-            case EFECTIVO:
-                pedido.setMontoTotal(pedido.getMontoTotal() * 0.85);
-                break;
-            case DEBITO:
-                pedido.setMontoTotal(pedido.getMontoTotal() * 0.90);
-                validarDatosTarjeta(metodoPago);
-                break;
-            case CREDITO:
-                validarDatosTarjeta(metodoPago);
-                break;
-            default:
-                throw new RuntimeException("Tipo de pago no soportado");
-        }
-
-        pedido.setMetodoPago(metodoPago);
-        pedido.setEstado(EstadoPedido.CONFIRMADO);
-        Pedido pedidoConfirmado = pedidoRepository.save(pedido);
-
-        Long usuarioId = pedido.getComprador().getId();  
-        HistorialPedidos historial = historialPedidosService.obtenerHistorialPorUsuario(usuarioId);
-
-        List<ItemPedido> itemsClonados = new ArrayList<>(pedido.getProductosAdquiridos());
-
-        EventosHistorial evento = new EventosHistorial();
-        evento.setHistorial(historial);  
-        evento.setPedido(pedidoConfirmado);
-        evento.setFechaEvento(LocalDateTime.now());
-        evento.setPrecioTotal(pedidoConfirmado.getMontoTotal());
-        evento.setItems(itemsClonados); 
-
-        eventosHistorialRepository.save(evento);
-
-        return pedidoConfirmado;
-
-    } catch (Exception e) {
-        throw new RuntimeException("Error al procesar el pago: " + e.getMessage());
     }
-}
+
+    @Transactional(rollbackOn = Exception.class)
+    public Pedido pagarPedidoUnico(Long pedidoId, MetodoPago metodoPago) {
+        try {
+            Pedido pedido = pedidoRepository.findById(pedidoId)
+                .orElseThrow(() -> new RuntimeException("Pedido no encontrado"));
+
+            if (pedido.getEstado() != EstadoPedido.PENDIENTE) {
+                throw new RuntimeException("El pedido no está en estado pendiente");
+            }
+
+            switch (metodoPago.getTipoPago()) {
+                case EFECTIVO:
+                    pedido.setMontoTotal(pedido.getMontoTotal() * 0.85);
+                    break;
+                case DEBITO:
+                    pedido.setMontoTotal(pedido.getMontoTotal() * 0.90);
+                    validarDatosTarjeta(metodoPago);
+                    break;
+                case CREDITO:
+                    validarDatosTarjeta(metodoPago);
+                    break;
+                default:
+                    throw new RuntimeException("Tipo de pago no soportado");
+            }
+
+            pedido.setEstado(EstadoPedido.CONFIRMADO);
+            Pedido pedidoConfirmado = pedidoRepository.save(pedido);
+
+            Long usuarioId = pedido.getComprador().getId();  
+            HistorialPedidos historial = historialPedidosService.obtenerHistorialPorUsuario(usuarioId);
+
+            List<ItemPedido> itemsClonados = new ArrayList<>(pedido.getProductosAdquiridos());
+
+            EventosHistorial evento = new EventosHistorial();
+            evento.setHistorial(historial);  
+            evento.setPedido(pedidoConfirmado);
+            evento.setFechaEvento(LocalDateTime.now());
+            evento.setPrecioTotal(pedidoConfirmado.getMontoTotal());
+            evento.setItems(itemsClonados); 
+
+            eventosHistorialRepository.save(evento);
+
+            return pedidoConfirmado;
+
+        } catch (Exception e) {
+            throw new RuntimeException("Error al procesar el pago: " + e.getMessage());
+        }
+    }
 
     private void registrarEventoHistorial(HistorialPedidos historial, Pedido pedido) {
         EventosHistorial evento = new EventosHistorial();

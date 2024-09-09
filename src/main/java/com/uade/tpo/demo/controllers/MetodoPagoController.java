@@ -1,8 +1,11 @@
 package com.uade.tpo.demo.controllers;
+
 import com.uade.tpo.demo.entity.MetodoPago;
+import com.uade.tpo.demo.entity.Pedido;
 import com.uade.tpo.demo.entity.Usuario;
 import com.uade.tpo.demo.repository.UserRepository;
 import com.uade.tpo.demo.service.MetodoPagoService;
+import com.uade.tpo.demo.service.PedidoService;
 import com.uade.tpo.demo.controllers.config.JwtService;
 import com.uade.tpo.demo.dto.MetodoPagoDTO;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,21 +20,23 @@ import java.util.stream.Collectors;
 public class MetodoPagoController {
 
     private final MetodoPagoService metodoPagoService;
-    private final UserRepository userRepository;  
-    private final JwtService jwtService; 
+    private final PedidoService pedidoService;
+    private final UserRepository userRepository;
+    private final JwtService jwtService;
 
     @Autowired
-    public MetodoPagoController(MetodoPagoService metodoPagoService, UserRepository userRepository, JwtService jwtService) {
+    public MetodoPagoController(MetodoPagoService metodoPagoService, PedidoService pedidoService, UserRepository userRepository, JwtService jwtService) {
         this.metodoPagoService = metodoPagoService;
+        this.pedidoService = pedidoService;
         this.userRepository = userRepository;
-        this.jwtService = jwtService;  
+        this.jwtService = jwtService;
     }
 
     @PostMapping
     public ResponseEntity<MetodoPagoDTO> crearMetodoPago(@RequestHeader("Authorization") String token, @RequestBody MetodoPagoDTO metodoPagoDTO) {
         MetodoPago metodoPago = convertirAEntidad(metodoPagoDTO);
 
-        String jwt = token.substring(7); 
+        String jwt = token.substring(7);
 
         String userEmail = jwtService.extractUsername(jwt);
 
@@ -51,6 +56,7 @@ public class MetodoPagoController {
         MetodoPago metodoPagoGuardado = metodoPagoService.crearMetodoPago(metodoPago);
         return ResponseEntity.ok(convertirADTO(metodoPagoGuardado));
     }
+
 
     private void validarDatosTarjeta(MetodoPago metodoPago) {
         if (metodoPago.getNumeroTarjeta() == null || metodoPago.getCodigoSeguridad() == null || metodoPago.getFechaVencimiento() == null) {
@@ -72,11 +78,11 @@ public class MetodoPagoController {
                 .collect(Collectors.toList());
         return ResponseEntity.ok(metodosPagoDTO);
     }
-        
+
     @GetMapping("/usuario")
     public ResponseEntity<List<MetodoPagoDTO>> obtenerMetodosPagoUsuario(@RequestHeader("Authorization") String token) {
 
-        String jwt = token.substring(7); 
+        String jwt = token.substring(7);
 
         String userEmail = jwtService.extractUsername(jwt);
 
@@ -106,16 +112,16 @@ public class MetodoPagoController {
 
     private MetodoPagoDTO convertirADTO(MetodoPago metodoPago) {
         MetodoPagoDTO dto = new MetodoPagoDTO();
-        dto.setId(metodoPago.getId());  
+        dto.setId(metodoPago.getId());
         dto.setUsuarioId(metodoPago.getUsuario().getId());
         dto.setNombrePropietario(metodoPago.getNombrePropietario());
         dto.setNumeroTarjeta(metodoPago.getNumeroTarjeta());
         dto.setCodigoSeguridad(metodoPago.getCodigoSeguridad());
         dto.setFechaVencimiento(metodoPago.getFechaVencimiento());
         dto.setDireccion(metodoPago.getDireccion());
-        dto.setTipoPago(metodoPago.getTipoPago()); 
+        dto.setTipoPago(metodoPago.getTipoPago());
         return dto;
-    }    
+    }
 
     private MetodoPago convertirAEntidad(MetodoPagoDTO metodoPagoDTO) {
         MetodoPago metodoPago = new MetodoPago();
@@ -125,7 +131,7 @@ public class MetodoPagoController {
         metodoPago.setCodigoSeguridad(metodoPagoDTO.getCodigoSeguridad());
         metodoPago.setFechaVencimiento(metodoPagoDTO.getFechaVencimiento());
         metodoPago.setDireccion(metodoPagoDTO.getDireccion());
-        metodoPago.setTipoPago(metodoPagoDTO.getTipoPago());  
+        metodoPago.setTipoPago(metodoPagoDTO.getTipoPago());
         return metodoPago;
     }
 }
