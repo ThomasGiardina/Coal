@@ -25,6 +25,7 @@ public class MetodoPago {
 
     private String numeroTarjeta;
 
+    @Transient
     private String codigoSeguridad;
 
     @Temporal(TemporalType.DATE)

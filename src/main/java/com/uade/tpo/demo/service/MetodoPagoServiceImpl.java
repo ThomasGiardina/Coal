@@ -25,6 +25,7 @@ public class MetodoPagoServiceImpl implements MetodoPagoService {
     public MetodoPago crearMetodoPago(MetodoPago metodoPago) {
         if (metodoPago.getTipoPago() == MetodoPago.TipoPago.CREDITO || metodoPago.getTipoPago() == MetodoPago.TipoPago.DEBITO) {
             validarDatosTarjeta(metodoPago);
+            metodoPago.setCodigoSeguridad(null); // Eliminar el CVV antes de guardar
         }
         return metodoPagoRepository.save(metodoPago);
     }
@@ -50,7 +51,7 @@ public class MetodoPagoServiceImpl implements MetodoPagoService {
         if (metodoPago.getTipoPago() == MetodoPago.TipoPago.CREDITO || metodoPago.getTipoPago() == MetodoPago.TipoPago.DEBITO) {
             validarDatosTarjeta(datosActualizados);
             metodoPago.setNumeroTarjeta(datosActualizados.getNumeroTarjeta());
-            metodoPago.setCodigoSeguridad(datosActualizados.getCodigoSeguridad());
+            metodoPago.setCodigoSeguridad(null);
             metodoPago.setFechaVencimiento(datosActualizados.getFechaVencimiento());
         } else {
             metodoPago.setNumeroTarjeta(null);

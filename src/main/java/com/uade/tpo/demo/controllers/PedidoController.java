@@ -18,10 +18,14 @@ public class PedidoController {
     private PedidoService pedidoService;
 
     @PostMapping("/{pedidoId}/pagar")
-    public ResponseEntity<Pedido> pagarPedido(@PathVariable Long pedidoId, @RequestBody Map<String, Long> request) {
-        Long metodoPagoId = request.get("metodoPagoId");
-        System.out.println("Método de pago ID: " + metodoPagoId); // Log para verificar
-        Pedido pedido = pedidoService.pagarPedido(pedidoId, metodoPagoId);
+    public ResponseEntity<Pedido> pagarPedido(@PathVariable Long pedidoId, @RequestBody Map<String, String> request) {
+        Long metodoPagoId = Long.parseLong(request.get("metodoPagoId"));  
+        String cvv = request.get("cvv");  
+
+        System.out.println("Método de pago ID: " + metodoPagoId);
+        System.out.println("CVV ingresado: " + cvv);
+
+        Pedido pedido = pedidoService.pagarPedidoConValidacionCVV(pedidoId, metodoPagoId, cvv);
         return ResponseEntity.ok(pedido);
     }
 
@@ -30,4 +34,5 @@ public class PedidoController {
         Pedido pedido = pedidoService.pagarPedidoUnico(pedidoId, metodoPago);
         return ResponseEntity.ok(pedido);
     }
+
 }

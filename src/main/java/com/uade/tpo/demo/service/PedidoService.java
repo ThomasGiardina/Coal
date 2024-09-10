@@ -221,4 +221,47 @@ public class PedidoService {
             pedidoRepository.save(pedido);
         }
     }
+
+    @Transactional(rollbackOn = Exception.class)
+    public Pedido pagarPedidoConValidacionCVV(Long pedidoId, Long metodoPagoId, String cvv) {
+        Pedido pedido = pedidoRepository.findById(pedidoId)
+            .orElseThrow(() -> new RuntimeException("Pedido no encontrado"));
+
+        if (pedido.getEstado() != EstadoPedido.PENDIENTE) {
+            throw new RuntimeException("El pedido no está en estado pendiente");
+        }
+
+        MetodoPago metodoPago = metodoPagoRepository.findById(metodoPagoId)
+            .orElseThrow(() -> new RuntimeException("Método de pago no encontrado"));
+
+        if (metodoPago.getTipoPago() == MetodoPago.TipoPago.CREDITO || metodoPago.getTipoPago() == MetodoPago.TipoPago.DEBITO) {
+            if (cvv == null || cvv.isEmpty()) {
+                throw new RuntimeException("El CVV es obligatorio para este tipo de pago.");
+            }
+            validarCVV(cvv); 
+        }
+
+        switch (metodoPago.getTipoPago()) {
+            case EFECTIVO:
+                pedido.setMontoTotal(pedido.getMontoTotal() * 0.85);
+                break;
+            case DEBITO:
+                pedido.setMontoTotal(pedido.getMontoTotal() * 0.90);
+                break;
+            case CREDITO:
+                break;
+            default:
+                throw new RuntimeException("Tipo de pago no soportado");
+        }
+
+        pedido.setMetodoPago(metodoPago);
+        pedido.setEstado(EstadoPedido.CONFIRMADO);
+        return pedidoRepository.save(pedido);
+    }
+
+    private void validarCVV(String cvv) {
+        if (!cvv.matches("\\d{3,4}")) {
+            throw new RuntimeException("CVV inválido. Debe tener 3 o 4 dígitos.");
+        }
+    }
 }
