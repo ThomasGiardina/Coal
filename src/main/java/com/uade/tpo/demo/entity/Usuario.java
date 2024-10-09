@@ -22,6 +22,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -42,10 +43,10 @@ public class Usuario implements UserDetails, Serializable {
     @Column(nullable = false, unique = true)
     private String email;
 
-    @Column(nullable = false)
+    @Column(nullable = true) 
     private String firstName;
 
-    @Column(nullable = false)
+    @Column(nullable = true)  
     private String lastName;
 
     @Column(nullable = false, unique = true)
@@ -57,7 +58,7 @@ public class Usuario implements UserDetails, Serializable {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private Rol role;
+    private Rol role;  
 
     @OneToMany(mappedBy = "comprador")
     @JsonBackReference
@@ -71,13 +72,10 @@ public class Usuario implements UserDetails, Serializable {
     @JsonManagedReference
     private List<MetodoPago> metodosPago;
 
-    // Getters y Setters adicionales, si es necesario
-
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return List.of(new SimpleGrantedAuthority("ROLE_" + role.name()));
     }
-
 
     @Override
     public String getUsername() {
@@ -108,7 +106,6 @@ public class Usuario implements UserDetails, Serializable {
         this.username = username;
     }
 
-    // Métodos adicionales relacionados con el Carrito, si son necesarios
     public void setCarrito(Carrito carrito) {
         this.carrito = carrito;
         carrito.setUsuario(this);
