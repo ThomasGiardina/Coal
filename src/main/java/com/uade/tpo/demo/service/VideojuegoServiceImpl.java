@@ -1,10 +1,13 @@
 package com.uade.tpo.demo.service;
 
+import com.uade.tpo.demo.entity.ItemPedido;
 import com.uade.tpo.demo.entity.Videojuego;
 import com.uade.tpo.demo.entity.Videojuego.CategoriaJuego;
 import com.uade.tpo.demo.exception.VideojuegoNotFoundException;
 import com.uade.tpo.demo.repository.VideojuegoRepository;
+import com.uade.tpo.demo.repository.ItemPedidoRepository;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -17,6 +20,9 @@ import java.util.List;
 
 @Service
 public class VideojuegoServiceImpl implements VideojuegoService {
+
+    @Autowired
+    private ItemPedidoRepository itemPedidoRepository;
 
     private final VideojuegoRepository videojuegoRepository;
 
@@ -54,6 +60,10 @@ public class VideojuegoServiceImpl implements VideojuegoService {
     @Override
     public void eliminarVideojuego(Long videojuegoId) throws VideojuegoNotFoundException {
         Videojuego videojuego = obtenerVideojuegoPorId(videojuegoId);
+        List<ItemPedido> itemsPedido = itemPedidoRepository.findByVideojuegoId(videojuegoId);
+        for (ItemPedido item : itemsPedido) {
+            itemPedidoRepository.delete(item);
+        }
         videojuegoRepository.delete(videojuego);
     }
 

@@ -1,3 +1,4 @@
+// CarritoService.java
 package com.uade.tpo.demo.service;
 
 import com.uade.tpo.demo.dao.CarritoDAO;
@@ -5,11 +6,14 @@ import com.uade.tpo.demo.dao.ItemCarritoDAO;
 import com.uade.tpo.demo.entity.Carrito;
 import com.uade.tpo.demo.entity.ItemCarrito;
 import com.uade.tpo.demo.entity.Videojuego;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 @Service
 public class CarritoService {
+    private static final Logger logger = LoggerFactory.getLogger(CarritoService.class);
     @Autowired
     private CarritoDAO carritoDAO;
 
@@ -50,7 +54,22 @@ public class CarritoService {
     }
 
     public void removeItemFromCarrito(Long itemId) {
-        itemCarritoDAO.deleteById(itemId);
+        ItemCarrito item = itemCarritoDAO.findById(itemId).orElse(null);
+        if (item != null) {
+            if (item.getCantidad() > 1) {
+                item.setCantidad(item.getCantidad() - 1);
+                itemCarritoDAO.save(item);
+                logger.info("Reduced quantity of item with ID {} in carrito with ID {}", itemId, item.getCarrito().getId());
+            } else {
+                Carrito carrito = item.getCarrito();
+                carrito.getItems().remove(item);
+                itemCarritoDAO.delete(item);
+                carritoDAO.save(carrito);
+                logger.info("Item with ID {} removed from carrito with ID {}", itemId, carrito.getId());
+            }
+        } else {
+            logger.warn("Item with ID {} not found", itemId);
+        }
     }
 
     public void vaciarCarrito(Carrito carrito) {

@@ -1,5 +1,6 @@
 package com.uade.tpo.demo.controllers;
 
+import com.uade.tpo.demo.dto.IdRequest;
 import com.uade.tpo.demo.dto.VideojuegoDTO;
 import com.uade.tpo.demo.entity.Usuario;
 import com.uade.tpo.demo.entity.Videojuego;
@@ -83,9 +84,9 @@ public class VideojuegoController {
     }
 
     // Eliminar un videojuego por ID
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> eliminarVideojuego(@PathVariable Long id) {
-        videojuegoService.eliminarVideojuego(id);
+    @DeleteMapping
+    public ResponseEntity<Void> eliminarVideojuego(@RequestBody IdRequest idRequest) {
+        videojuegoService.eliminarVideojuego(idRequest.getId());
         return ResponseEntity.noContent().build();
     }
 
@@ -96,14 +97,14 @@ public class VideojuegoController {
     }
 
     // Agregar stock a un videojuego
-    @PostMapping("/{id}/agregarStock")
+    @PutMapping("/{id}/agregarStock")
     public ResponseEntity<VideojuegoDTO> agregarStock(@PathVariable Long id, @RequestParam int cantidad) {
         Videojuego videojuego = videojuegoService.agregarStock(id, cantidad);
         return ResponseEntity.ok(convertirADTO(videojuego));
     }
 
     // Disminuir stock de un videojuego
-    @PostMapping("/{id}/disminuirStock")
+    @PutMapping("/{id}/disminuirStock")
     public ResponseEntity<VideojuegoDTO> disminuirStock(@PathVariable Long id, @RequestParam int cantidad) {
         Videojuego videojuego = videojuegoService.disminuirStock(id, cantidad);
         return ResponseEntity.ok(convertirADTO(videojuego));
