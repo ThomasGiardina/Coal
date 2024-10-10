@@ -18,9 +18,11 @@ import com.uade.tpo.demo.repository.CarritoRepository;
 import com.uade.tpo.demo.repository.HistorialPedidosRepository;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j; 
 
 @Service
 @RequiredArgsConstructor
+@Slf4j  
 public class AuthenticationService {
         private final UserRepository repository;
         private final CarritoRepository carritoRepository;
@@ -30,13 +32,15 @@ public class AuthenticationService {
         private final HistorialPedidosRepository historialPedidosRepository;
 
         public AuthenticationResponse register(RegisterRequest request) {
+                log.info("Iniciando proceso de registro para: {}", request.getEmail());  
+
                 var user = Usuario.builder()
                         .username(request.getUsername())
                         .firstName(request.getFirstname())
                         .lastName(request.getLastname())
                         .email(request.getEmail())
                         .password(passwordEncoder.encode(request.getPassword()))
-                        .role(Rol.USER)  
+                        .role(Rol.USER) 
                         .build();
 
                 Usuario savedUser = repository.save(user);
@@ -49,27 +53,34 @@ public class AuthenticationService {
                 historialPedidosRepository.save(historialPedidos);
 
                 carritoRepository.save(carrito);
-
                 savedUser.setCarrito(carrito);
                 repository.save(savedUser);
 
                 var jwtToken = jwtService.generateToken(savedUser);
+                log.info("Token generado para usuario {}: {}", savedUser.getUsername(), jwtToken);  
+
                 return AuthenticationResponse.builder()
                         .accessToken(jwtToken)
-                        .role(savedUser.getRole().name()) 
+                        .role(savedUser.getRole().name())  
                         .build();
         }
 
         public AuthenticationResponse authenticate(AuthenticationRequest request) {
+                log.info("Autenticando usuario: {}", request.getEmail());  
+
                 authenticationManager.authenticate(
                         new UsernamePasswordAuthenticationToken(
                                 request.getEmail(),
                                 request.getPassword()));
                 
                 var user = repository.findByEmail(request.getEmail())
-                        .orElseThrow();
+                        .orElseThrow(() -> {
+                        log.error("Usuario no encontrado: {}", request.getEmail()); 
+                        return new RuntimeException("Usuario no encontrado");
+                        });
 
                 var jwtToken = jwtService.generateToken(user);
+                log.info("Token generado para usuario {}: {}", user.getUsername(), jwtToken); 
                 
                 return AuthenticationResponse.builder()
                         .accessToken(jwtToken)
