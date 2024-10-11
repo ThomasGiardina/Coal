@@ -96,6 +96,12 @@ public class VideojuegoController {
         return ResponseEntity.ok(convertirADTO(videojuego));
     }
 
+    @PostMapping("/{id}/foto2")
+    public ResponseEntity<VideojuegoDTO> subirFoto2(@PathVariable Long id, @RequestParam("foto2") MultipartFile foto2) throws IOException {
+        Videojuego videojuego = videojuegoService.subirFoto2(id, foto2);
+        return ResponseEntity.ok(convertirADTO(videojuego));
+    }
+
     // Agregar stock a un videojuego
     @PutMapping("/{id}/agregarStock")
     public ResponseEntity<VideojuegoDTO> agregarStock(@PathVariable Long id, @RequestParam int cantidad) {

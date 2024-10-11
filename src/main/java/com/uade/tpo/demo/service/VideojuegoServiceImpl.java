@@ -116,6 +116,14 @@ public class VideojuegoServiceImpl implements VideojuegoService {
         return videojuegoRepository.save(videojuego);
     }
 
+    @Override
+    public Videojuego subirFoto2(Long videojuegoId, MultipartFile foto2) throws IOException, VideojuegoNotFoundException {
+        Videojuego videojuego = obtenerVideojuegoPorId(videojuegoId);
+        String fotoUrl2 = guardarFoto(foto2);
+        videojuego.setFotoUrl2(fotoUrl2);
+        return videojuegoRepository.save(videojuego);
+    }
+
     private String guardarFoto(MultipartFile foto) throws IOException {
     String folder = "fotos/";
     File directory = new File(folder);

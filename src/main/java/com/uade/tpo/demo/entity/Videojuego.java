@@ -40,6 +40,9 @@ public class Videojuego {
     @Column(nullable = true)
     private String fotoUrl;
 
+    @Column(nullable = true)
+    private String fotoUrl2;
+
     public enum CategoriaJuego{
         ACCION,
         AVENTURA,
