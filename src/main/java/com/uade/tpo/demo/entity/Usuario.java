@@ -43,10 +43,10 @@ public class Usuario implements UserDetails, Serializable {
     @Column(nullable = false, unique = true)
     private String email;
 
-    @Column(nullable = true) 
+    @Column(nullable = false) 
     private String firstName;
 
-    @Column(nullable = true)  
+    @Column(nullable = false)  
     private String lastName;
 
     @Column(nullable = false, unique = true)
