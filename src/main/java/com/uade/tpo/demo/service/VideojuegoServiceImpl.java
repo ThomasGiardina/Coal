@@ -36,6 +36,21 @@ public class VideojuegoServiceImpl implements VideojuegoService {
     }
 
     @Override
+    public Videojuego crearVideojuego(Videojuego videojuego, MultipartFile foto, MultipartFile foto2) throws IOException {
+        // Convertir las imágenes en bytes y guardarlas en la entidad
+        if (foto != null && !foto.isEmpty()) {
+            videojuego.setFoto(foto.getBytes());  // Guardar la imagen como bytes
+        }
+
+        if (foto2 != null && !foto2.isEmpty()) {
+            videojuego.setFoto2(foto2.getBytes());  // Guardar la imagen secundaria como bytes
+        }
+
+        return videojuegoRepository.save(videojuego);  // Guardar el videojuego en la base de datos
+    }
+
+
+    @Override
     public Videojuego obtenerVideojuegoPorId(Long videojuegoId) throws VideojuegoNotFoundException {
         return videojuegoRepository.findById(videojuegoId)
                 .orElseThrow(() -> new VideojuegoNotFoundException("Videojuego no encontrado"));
@@ -111,18 +126,17 @@ public class VideojuegoServiceImpl implements VideojuegoService {
     @Override
     public Videojuego subirFoto(Long videojuegoId, MultipartFile foto) throws IOException, VideojuegoNotFoundException {
         Videojuego videojuego = obtenerVideojuegoPorId(videojuegoId);
-        String fotoUrl = guardarFoto(foto);
-        videojuego.setFotoUrl(fotoUrl);
+        videojuego.setFoto(foto.getBytes());  // Guardar la imagen como byte[]
         return videojuegoRepository.save(videojuego);
     }
 
     @Override
     public Videojuego subirFoto2(Long videojuegoId, MultipartFile foto2) throws IOException, VideojuegoNotFoundException {
         Videojuego videojuego = obtenerVideojuegoPorId(videojuegoId);
-        String fotoUrl2 = guardarFoto(foto2);
-        videojuego.setFotoUrl2(fotoUrl2);
+        videojuego.setFoto2(foto2.getBytes());  // Guardar la imagen secundaria como byte[]
         return videojuegoRepository.save(videojuego);
     }
+
 
     private String guardarFoto(MultipartFile foto) throws IOException {
     String folder = "fotos/";

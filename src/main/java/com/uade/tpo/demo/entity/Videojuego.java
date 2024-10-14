@@ -9,6 +9,7 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Lob;
 import lombok.Data;
 
 @Data
@@ -37,11 +38,13 @@ public class Videojuego {
     @Column(nullable = false)
     private Integer stock;
 
+    @Lob  // Esto indica que el campo almacenará datos grandes (Large Object)
     @Column(nullable = true)
-    private String fotoUrl;
+    private byte[] foto;  // Almacenar la imagen principal como binario
 
+    @Lob
     @Column(nullable = true)
-    private String fotoUrl2;
+    private byte[] foto2;  // Almacenar la imagen secundaria como binario
 
     public enum CategoriaJuego{
         ACCION,

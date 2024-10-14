@@ -1,7 +1,6 @@
 package com.uade.tpo.demo.dto;
 
 import com.uade.tpo.demo.entity.Videojuego.CategoriaJuego;
-
 import lombok.Data;
 
 @Data
@@ -13,6 +12,8 @@ public class VideojuegoDTO {
     private String plataforma;
     private CategoriaJuego categoria;
     private Integer stock;
-    private String fotoUrl;
-    private String fotoUrl2;
+
+    // Nuevos campos para almacenar las imágenes en formato Base64
+    private String foto;  // Imagen principal en formato Base64
+    private String foto2;  // Imagen secundaria en formato Base64
 }

@@ -34,29 +34,61 @@ public class VideojuegoController {
         this.jwtService = jwtService;  // Inicialización de JwtService
     }
 
-    // Crear un nuevo videojuego
     @PostMapping
-    public ResponseEntity<VideojuegoDTO> crearVideojuego(@RequestHeader("Authorization") String token, @RequestBody VideojuegoDTO videojuegoDTO) {
-        // Extraer el token JWT del header "Authorization"
-        String jwt = token.substring(7); // Remover "Bearer " del token
+    public ResponseEntity<VideojuegoDTO> crearVideojuego(
+        @RequestHeader("Authorization") String token,
+        @RequestParam("titulo") String titulo,
+        @RequestParam("descripcion") String descripcion,
+        @RequestParam("precio") Double precio,
+        @RequestParam("plataforma") String plataforma,
+        @RequestParam("categoria") CategoriaJuego categoria,
+        @RequestParam("stock") Integer stock,
+        @RequestParam(value = "foto", required = false) MultipartFile foto,
+        @RequestParam(value = "foto2", required = false) MultipartFile foto2
+    ) {
+        try {
+            // Validar token y usuario con rol ADMIN
+            String jwt = token.substring(7);
+            String userEmail = jwtService.extractUsername(jwt);
+            Usuario usuario = userRepository.findByEmail(userEmail)
+                    .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado"));
 
-        // Usar JwtService para obtener el email del usuario desde el token
-        String userEmail = jwtService.extractUsername(jwt);
+            if (!usuario.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_ADMIN"))) {
+                return ResponseEntity.status(403).build(); // Forbidden
+            }
 
-        // Buscar el usuario en la base de datos por su email
-        Usuario usuario = userRepository.findByEmail(userEmail)
-                            .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado"));
+            // Crear el objeto videojuego
+            Videojuego videojuego = new Videojuego();
+            videojuego.setTitulo(titulo);
+            videojuego.setDescripcion(descripcion);
+            videojuego.setPrecio(precio);
+            videojuego.setPlataforma(plataforma);
+            videojuego.setCategoria(categoria);
+            videojuego.setStock(stock);
 
-        // Verificar que el usuario tenga el rol ADMIN
-        if (!usuario.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_ADMIN"))) {
-            return ResponseEntity.status(403).build(); // Forbidden
+            // Guardar el videojuego y las imágenes como bytes
+            videojuegoService.crearVideojuego(videojuego, foto, foto2);
+
+            // Retornar el DTO del videojuego creado
+            return ResponseEntity.ok(convertirADTO(videojuego));
+
+        } catch (IllegalArgumentException e) {
+            // Captura de errores de validación como "Usuario no encontrado"
+            return ResponseEntity.status(400).body(null); // Bad Request
+
+        } catch (IOException e) {
+            // Captura de errores relacionados con la carga de archivos
+            e.printStackTrace(); // Imprime el error en los logs del servidor para depuración
+            return ResponseEntity.status(500).body(null); // Internal Server Error
+
+        } catch (Exception e) {
+            // Captura de cualquier otra excepción inesperada
+            e.printStackTrace(); // Imprime el error en los logs del servidor para depuración
+            return ResponseEntity.status(500).body(null); // Internal Server Error
         }
-
-        // Convertir y guardar el videojuego
-        Videojuego videojuego = convertirAEntidad(videojuegoDTO);
-        Videojuego videojuegoGuardado = videojuegoService.crearVideojuego(videojuego);
-        return ResponseEntity.ok(convertirADTO(videojuegoGuardado));
     }
+
+
 
     // Obtener un videojuego por ID
     @GetMapping("/{id}")
@@ -147,6 +179,7 @@ public class VideojuegoController {
 
     // Métodos de utilidad para convertir entre DTO y Entidad
 
+    // Convertir de entidad a DTO
     private VideojuegoDTO convertirADTO(Videojuego videojuego) {
         VideojuegoDTO dto = new VideojuegoDTO();
         dto.setId(videojuego.getId());
@@ -156,10 +189,11 @@ public class VideojuegoController {
         dto.setPlataforma(videojuego.getPlataforma());
         dto.setCategoria(videojuego.getCategoria());
         dto.setStock(videojuego.getStock());
-        dto.setFotoUrl(videojuego.getFotoUrl());
+        // No incluir fotoUrl ni fotoUrl2 en el DTO ya que son datos binarios
         return dto;
     }
 
+    // Convertir de DTO a entidad
     private Videojuego convertirAEntidad(VideojuegoDTO dto) {
         Videojuego videojuego = new Videojuego();
         videojuego.setId(dto.getId());
@@ -169,7 +203,8 @@ public class VideojuegoController {
         videojuego.setPlataforma(dto.getPlataforma());
         videojuego.setCategoria(dto.getCategoria());
         videojuego.setStock(dto.getStock());
-        videojuego.setFotoUrl(dto.getFotoUrl());
+        // No incluir setFotoUrl ni setFotoUrl2 ya que las imágenes no están en el DTO
         return videojuego;
     }
+
 }

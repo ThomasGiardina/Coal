@@ -23,4 +23,5 @@ public interface VideojuegoService {
     List<Videojuego> buscarPorCategoria(CategoriaJuego categoria);
     Videojuego subirFoto(Long videojuegoId, MultipartFile foto) throws IOException, VideojuegoNotFoundException;
     Videojuego subirFoto2(Long videojuegoId, MultipartFile foto2) throws IOException, VideojuegoNotFoundException;
+    Videojuego crearVideojuego(Videojuego videojuego, MultipartFile foto, MultipartFile foto2) throws IOException;
 }
