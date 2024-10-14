@@ -43,10 +43,10 @@ public class Usuario implements UserDetails, Serializable {
     @Column(nullable = false, unique = true)
     private String email;
 
-    @Column(nullable = false) 
+    @Column(nullable = false)
     private String firstName;
 
-    @Column(nullable = false)  
+    @Column(nullable = false)
     private String lastName;
 
     @Column(nullable = false, unique = true)
@@ -58,7 +58,10 @@ public class Usuario implements UserDetails, Serializable {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private Rol role;  
+    private Rol role;
+
+    @Column(nullable = true)  
+    private String telefono;
 
     @OneToMany(mappedBy = "comprador")
     @JsonBackReference
@@ -79,7 +82,11 @@ public class Usuario implements UserDetails, Serializable {
 
     @Override
     public String getUsername() {
-        return email;
+        return email;  // Devuelve el verdadero nombre de usuario
+    }
+
+    public String getRealUsername() {
+        return username; // Este es el verdadero nombre de usuario, si es lo que necesitas devolver.
     }
 
     @Override
