@@ -2,6 +2,7 @@ package com.uade.tpo.demo.entity;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.ToString;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 
@@ -14,6 +15,7 @@ public class Carrito {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @ToString.Exclude  // Excluir la relación bidireccional para evitar recursividad en el toString()
     @OneToOne
     @JoinColumn(name = "usuario_id", referencedColumnName = "id")
     @JsonBackReference

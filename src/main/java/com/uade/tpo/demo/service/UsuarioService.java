@@ -10,8 +10,10 @@ import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -19,67 +21,105 @@ import com.uade.tpo.demo.entity.Usuario;
 import com.uade.tpo.demo.exception.UserNotFoundException;
 import com.uade.tpo.demo.repository.UserRepository;
 
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 @Service
 public class UsuarioService {
 
     @Autowired
     private UserRepository usuarioRepository;
 
-    // Método para actualizar los datos del usuario
-    public Usuario actualizarUsuario(Usuario usuario) {
-        if (usuario.getFirstName() == null || usuario.getFirstName().isEmpty()) {
-            throw new RuntimeException("El campo firstName no puede estar vacío.");
-        }
-        if (usuario.getLastName() == null || usuario.getLastName().isEmpty()) {
-            throw new RuntimeException("El campo lastName no puede estar vacío.");
-        }
-        return usuarioRepository.findById(usuario.getId())  // Encuentra el usuario por ID
-                .map(usuarioExistente -> {
-                    usuarioExistente.setUsername(usuario.getUsername());
-                    usuarioExistente.setFirstName(usuario.getFirstName());
-                    usuarioExistente.setLastName(usuario.getLastName());
-                    usuarioExistente.setEmail(usuario.getEmail());
-                    if (usuario.getTelefono() != null) {
-                        usuarioExistente.setTelefono(usuario.getTelefono());
-                    }  // Manejar nulos si es necesario
-                    return usuarioRepository.save(usuarioExistente);
-                })
-                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
-    }
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
-    // Método para obtener el usuario actual
+    public Usuario actualizarUsuario(Usuario usuario) {
+        log.info("Iniciando actualización del usuario con ID: {}", usuario.getId());  
+    
+        return usuarioRepository.findById(usuario.getId())  
+            .map(usuarioExistente -> {
+                log.info("Usuario encontrado: {}", usuarioExistente);
+    
+                // Actualizando el username si es necesario
+                if (usuario.getRealUsername() != null && !usuario.getRealUsername().isEmpty()) {
+                    log.info("Actualizando username de {} a {}", usuarioExistente.getUsername(), usuario.getRealUsername());
+                    usuarioExistente.setUsername(usuario.getRealUsername());
+                }
+    
+                // Actualizando el email si es necesario
+                if (usuario.getEmail() != null && !usuario.getEmail().isEmpty()) {
+                    log.info("Actualizando email de {} a {}", usuarioExistente.getEmail(), usuario.getEmail());
+                    usuarioExistente.setEmail(usuario.getEmail());
+                }
+    
+                // Actualizando el firstName si es necesario
+                if (usuario.getFirstName() != null && !usuario.getFirstName().isEmpty()) {
+                    log.info("Actualizando firstName de {} a {}", usuarioExistente.getFirstName(), usuario.getFirstName());
+                    usuarioExistente.setFirstName(usuario.getFirstName());
+                }
+    
+                // Actualizando el lastName si es necesario
+                if (usuario.getLastName() != null && !usuario.getLastName().isEmpty()) {
+                    log.info("Actualizando lastName de {} a {}", usuarioExistente.getLastName(), usuario.getLastName());
+                    usuarioExistente.setLastName(usuario.getLastName());
+                }
+    
+                // Actualizando el telefono si es necesario
+                if (usuario.getTelefono() != null && !usuario.getTelefono().isEmpty()) {
+                    log.info("Actualizando telefono de {} a {}", usuarioExistente.getTelefono(), usuario.getTelefono());
+                    usuarioExistente.setTelefono(usuario.getTelefono());
+                }
+    
+                log.info("Guardando cambios para el usuario: {}", usuarioExistente);
+                return usuarioRepository.save(usuarioExistente);
+            })
+            .orElseThrow(() -> {
+                log.error("Usuario con ID {} no encontrado", usuario.getId());
+                return new RuntimeException("Usuario no encontrado");
+            });
+    }
+    
+    
+
     public Usuario obtenerUsuarioActual() {
         String emailUsuarioActual = obtenerEmailUsuarioActual();
         return usuarioRepository.findByEmail(emailUsuarioActual)
                 .orElseThrow(() -> new UserNotFoundException("Usuario no encontrado con el email: " + emailUsuarioActual));
     }
 
-    // Método para obtener el email del usuario actual autenticado
     public String obtenerEmailUsuarioActual() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication != null && authentication.isAuthenticated()) {
-            return authentication.getName();  // Aquí devuelves el email del usuario autenticado
+            return authentication.getName();  
         } else {
             throw new RuntimeException("No se pudo autenticar al usuario.");
         }
     }
 
-    @Value("${upload.dir}") // Inyectar la propiedad del directorio de subida desde application.properties
+    @Value("${upload.dir}") 
     private String uploadDir;
 
-    // Guardar la imagen en el sistema de archivos y actualizar la ruta en el usuario
     public Usuario actualizarImagenUsuario(MultipartFile imagen) throws IOException {
-        // Obtener el usuario actual autenticado
+
         Usuario usuario = obtenerUsuarioActual();
 
-        // Guardar la imagen en el directorio especificado
         String fileName = imagen.getOriginalFilename();
         Path filePath = Paths.get(uploadDir, fileName);
         Files.copy(imagen.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
 
-        // Actualizar la ruta de la imagen en el usuario
-        usuario.setImagenPerfil(fileName);  // Guardamos solo el nombre del archivo
-        return usuarioRepository.save(usuario); // Guardamos la información actualizada del usuario
+        usuario.setImagenPerfil(fileName);  
+        return usuarioRepository.save(usuario); 
+    }
+
+    public void cambiarContrasena(String contraseñaActual, String nuevaContraseña) {
+        Usuario usuario = obtenerUsuarioActual();
+
+        if (!passwordEncoder.matches(contraseñaActual, usuario.getPassword())) {
+            throw new BadCredentialsException("La contraseña actual es incorrecta.");
+        }
+
+        usuario.setPassword(passwordEncoder.encode(nuevaContraseña));
+        usuarioRepository.save(usuario);
     }
 
 }

@@ -8,10 +8,10 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class UsuarioDTO {
-    private Long id;         // El ID del usuario
-    private String username;  // El nombre de usuario
-    private String email;     // El email del usuario
-    private String firstName; // El nombre del usuario
-    private String lastName;  // El apellido del usuario
-    private String telefono;  // El teléfono del usuario
+    private Long id;         
+    private String username;  
+    private String email;     
+    private String firstName; 
+    private String lastName;  
+    private String telefono;  
 }

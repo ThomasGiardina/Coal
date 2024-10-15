@@ -35,6 +35,10 @@ public class MetodoPagoServiceImpl implements MetodoPagoService {
         return metodoPagoRepository.save(metodoPago);
     }
 
+    public boolean validarCVV(MetodoPago metodoPago, String cvvIngresado) {
+        return passwordEncoder.matches(cvvIngresado, metodoPago.getCodigoSeguridad());
+    }
+
     @Override
     public MetodoPago obtenerMetodoPagoPorId(Long metodoPagoId) throws MetodoPagoNotFoundException {
         return metodoPagoRepository.findById(metodoPagoId)

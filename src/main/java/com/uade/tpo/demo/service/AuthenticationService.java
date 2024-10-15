@@ -32,10 +32,18 @@ public class AuthenticationService {
         private final HistorialPedidosRepository historialPedidosRepository;
 
         public AuthenticationResponse register(RegisterRequest request) {
-                log.info("Iniciando proceso de registro para: {}", request.getEmail());  
-
+                log.info("Iniciando proceso de registro para: {}", request.getEmail());
+                
+                
+                if (repository.existsByEmail(request.getEmail())) {
+                        throw new RuntimeException("email_already_exists");
+                }
+                if (repository.existsByUsername(request.getUsername())) {
+                        throw new RuntimeException("username_already_exists");
+                }
+                
                 String imagenPerfil = "defaultUser.jpg";
-
+                
                 var user = Usuario.builder()
                         .username(request.getUsername())
                         .firstName(request.getFirstname())
@@ -45,26 +53,26 @@ public class AuthenticationService {
                         .imagenPerfil(imagenPerfil)
                         .role(Rol.USER) 
                         .build();
-
+                
                 Usuario savedUser = repository.save(user);
-
+                
                 Carrito carrito = new Carrito();
                 carrito.setUsuario(savedUser);
-
+                
                 HistorialPedidos historialPedidos = new HistorialPedidos();
                 historialPedidos.setUsuario(savedUser);
                 historialPedidosRepository.save(historialPedidos);
-
+                
                 carritoRepository.save(carrito);
                 savedUser.setCarrito(carrito);
                 repository.save(savedUser);
-
+                
                 var jwtToken = jwtService.generateToken(savedUser);
-                log.info("Token generado para usuario {}: {}", savedUser.getUsername(), jwtToken);  
-
+                log.info("Token generado para usuario {}: {}", savedUser.getUsername(), jwtToken);
+                
                 return AuthenticationResponse.builder()
                         .accessToken(jwtToken)
-                        .role(savedUser.getRole().name())  
+                        .role(savedUser.getRole().name())
                         .build();
         }
 

@@ -46,44 +46,45 @@ public class UsuarioController {
     }
 
     @GetMapping("/actual")
-    public ResponseEntity<UsuarioDTO> obtenerUsuarioActual() {
-        try {
-            Usuario usuarioActual = usuarioService.obtenerUsuarioActual();
-            UsuarioDTO usuarioDTO = new UsuarioDTO(
-                usuarioActual.getId(),
-                usuarioActual.getRealUsername(),
-                usuarioActual.getEmail(),
-                usuarioActual.getFirstName(),
-                usuarioActual.getLastName(),
-                usuarioActual.getTelefono()
-            );
-            return ResponseEntity.ok(usuarioDTO);
-        } catch (Exception e) {
-            return ResponseEntity.status(500).body(null);
-        }
+public ResponseEntity<UsuarioDTO> obtenerUsuarioActual() {
+    try {
+        Usuario usuarioActual = usuarioService.obtenerUsuarioActual();
+        
+        UsuarioDTO usuarioDTO = new UsuarioDTO(
+            usuarioActual.getId(),
+            usuarioActual.getRealUsername(),  
+            usuarioActual.getEmail(),
+            usuarioActual.getFirstName(),
+            usuarioActual.getLastName(),
+            usuarioActual.getTelefono()
+        );
+        return ResponseEntity.ok(usuarioDTO);
+    } catch (Exception e) {
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
     }
+}
 
-    @Value("${upload.dir}") // Inyectamos el directorio de subida desde application.properties
+    @Value("${upload.dir}") 
     private String uploadDir;
 
     @PostMapping("/actualizar-imagen")
-public ResponseEntity<String> actualizarImagenPerfil(@RequestParam("imagen") MultipartFile file) {
-    try {
-        Usuario usuarioActual = usuarioService.obtenerUsuarioActual();
+    public ResponseEntity<String> actualizarImagenPerfil(@RequestParam("imagen") MultipartFile file) {
+        try {
+            Usuario usuarioActual = usuarioService.obtenerUsuarioActual();
 
-        String fileName = file.getOriginalFilename();
-        Path filePath = Paths.get(uploadDir, fileName);
-        Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
+            String fileName = file.getOriginalFilename();
+            Path filePath = Paths.get(uploadDir, fileName);
+            Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
 
-        usuarioActual.setImagenPerfil(fileName); // Guardar el nombre del archivo
-        usuarioService.actualizarUsuario(usuarioActual);
+            usuarioActual.setImagenPerfil(fileName); 
+            usuarioService.actualizarUsuario(usuarioActual);
 
-        return ResponseEntity.ok(fileName); // Devolver el nombre de la imagen
-    } catch (Exception e) {
-        e.printStackTrace();
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error al actualizar la imagen.");
+            return ResponseEntity.ok(fileName); 
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error al actualizar la imagen.");
+        }
     }
-}
 
     @GetMapping("/imagen/{nombreImagen}")
     public ResponseEntity<Resource> obtenerImagen(@PathVariable String nombreImagen) {
@@ -93,13 +94,26 @@ public ResponseEntity<String> actualizarImagenPerfil(@RequestParam("imagen") Mul
 
             if (resource.exists() || resource.isReadable()) {
                 return ResponseEntity.ok()
-                        .contentType(MediaType.IMAGE_JPEG) // Cambiar el tipo de contenido si es PNG o JPEG
+                        .contentType(MediaType.IMAGE_JPEG) 
                         .body(resource);
             } else {
                 throw new RuntimeException("No se pudo leer la imagen.");
             }
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+        }
+    }
+
+    @PutMapping("/cambiar-contrasena")
+    public ResponseEntity<String> cambiarContrasena(
+            @RequestParam("contraseñaActual") String contraseñaActual,
+            @RequestParam("nuevaContraseña") String nuevaContraseña) {
+        try {
+            usuarioService.cambiarContrasena(contraseñaActual, nuevaContraseña);
+            return ResponseEntity.ok("Contraseña cambiada exitosamente.");
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Error al cambiar la contraseña.");
         }
     }
 }

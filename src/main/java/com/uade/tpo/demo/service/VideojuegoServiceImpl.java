@@ -37,16 +37,15 @@ public class VideojuegoServiceImpl implements VideojuegoService {
 
     @Override
     public Videojuego crearVideojuego(Videojuego videojuego, MultipartFile foto, MultipartFile foto2) throws IOException {
-        // Convertir las imágenes en bytes y guardarlas en la entidad
         if (foto != null && !foto.isEmpty()) {
-            videojuego.setFoto(foto.getBytes());  // Guardar la imagen como bytes
+            videojuego.setFoto(foto.getBytes());  
         }
 
         if (foto2 != null && !foto2.isEmpty()) {
-            videojuego.setFoto2(foto2.getBytes());  // Guardar la imagen secundaria como bytes
+            videojuego.setFoto2(foto2.getBytes());  
         }
 
-        return videojuegoRepository.save(videojuego);  // Guardar el videojuego en la base de datos
+        return videojuegoRepository.save(videojuego);  
     }
 
 
@@ -126,14 +125,14 @@ public class VideojuegoServiceImpl implements VideojuegoService {
     @Override
     public Videojuego subirFoto(Long videojuegoId, MultipartFile foto) throws IOException, VideojuegoNotFoundException {
         Videojuego videojuego = obtenerVideojuegoPorId(videojuegoId);
-        videojuego.setFoto(foto.getBytes());  // Guardar la imagen como byte[]
+        videojuego.setFoto(foto.getBytes());  
         return videojuegoRepository.save(videojuego);
     }
 
     @Override
     public Videojuego subirFoto2(Long videojuegoId, MultipartFile foto2) throws IOException, VideojuegoNotFoundException {
         Videojuego videojuego = obtenerVideojuegoPorId(videojuegoId);
-        videojuego.setFoto2(foto2.getBytes());  // Guardar la imagen secundaria como byte[]
+        videojuego.setFoto2(foto2.getBytes()); 
         return videojuegoRepository.save(videojuego);
     }
 
@@ -142,7 +141,7 @@ public class VideojuegoServiceImpl implements VideojuegoService {
     String folder = "fotos/";
     File directory = new File(folder);
     if (!directory.exists()) {
-        directory.mkdirs(); // Crear el directorio si no existe
+        directory.mkdirs(); 
     }
     byte[] bytes = foto.getBytes();
     Path path = Paths.get(folder + foto.getOriginalFilename());

@@ -28,6 +28,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 
 @Data
 @Builder
@@ -68,6 +69,7 @@ public class Usuario implements UserDetails, Serializable {
     @JsonBackReference
     private List<Pedido> pedidos;
 
+    @ToString.Exclude  
     @OneToOne(mappedBy = "usuario", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonManagedReference
     private Carrito carrito;
@@ -96,11 +98,11 @@ public class Usuario implements UserDetails, Serializable {
 
     @Override
     public String getUsername() {
-        return email;  // Devuelve el verdadero nombre de usuario
+        return email;  
     }
 
     public String getRealUsername() {
-        return username; // Este es el verdadero nombre de usuario, si es lo que necesitas devolver.
+        return username; 
     }
 
     @Override
