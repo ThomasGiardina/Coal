@@ -34,12 +34,15 @@ public class AuthenticationService {
         public AuthenticationResponse register(RegisterRequest request) {
                 log.info("Iniciando proceso de registro para: {}", request.getEmail());  
 
+                String imagenPerfil = "defaultUser.jpg";
+
                 var user = Usuario.builder()
                         .username(request.getUsername())
                         .firstName(request.getFirstname())
                         .lastName(request.getLastname())
                         .email(request.getEmail())
                         .password(passwordEncoder.encode(request.getPassword()))
+                        .imagenPerfil(imagenPerfil)
                         .role(Rol.USER) 
                         .build();
 

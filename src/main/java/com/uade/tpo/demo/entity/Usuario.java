@@ -20,6 +20,7 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Lob;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 
@@ -74,6 +75,19 @@ public class Usuario implements UserDetails, Serializable {
     @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonManagedReference
     private List<MetodoPago> metodosPago;
+
+
+    @Column(name = "imagen_perfil", nullable = true)
+    private String imagenPerfil; 
+
+    // Getters y setters
+    public String getImagenPerfil() {
+        return imagenPerfil;
+    }
+
+    public void setImagenPerfil(String imagenPerfil) {
+        this.imagenPerfil = imagenPerfil;
+    }
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
