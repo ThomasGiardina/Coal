@@ -14,4 +14,5 @@ public interface MetodoPagoService {
     MetodoPago actualizarMetodoPago(Long metodoPagoId, MetodoPago datosActualizados) throws MetodoPagoNotFoundException;
     void eliminarMetodoPago(Long metodoPagoId) throws MetodoPagoNotFoundException;
     List<MetodoPago> obtenerMetodosPagoPorUsuario(Usuario usuario);
+    public boolean validarCVV(MetodoPago metodoPago, String cvvIngresado);
 }

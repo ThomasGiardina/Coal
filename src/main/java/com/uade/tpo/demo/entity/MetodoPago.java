@@ -25,7 +25,7 @@ public class MetodoPago {
 
     private String numeroTarjeta;
 
-    @Transient
+    @Column(nullable = false)
     private String codigoSeguridad;
 
     @Temporal(TemporalType.DATE)

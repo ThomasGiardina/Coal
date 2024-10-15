@@ -6,6 +6,8 @@ import com.uade.tpo.demo.entity.Usuario;
 import com.uade.tpo.demo.exception.MetodoPagoNotFoundException;
 import com.uade.tpo.demo.repository.MetodoPagoRepository;
 import com.uade.tpo.demo.repository.PedidoRepository;
+
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -15,17 +17,20 @@ public class MetodoPagoServiceImpl implements MetodoPagoService {
 
     private final MetodoPagoRepository metodoPagoRepository;
     private final PedidoRepository pedidoRepository;
+    private final PasswordEncoder passwordEncoder;  
+    
 
-    public MetodoPagoServiceImpl(MetodoPagoRepository metodoPagoRepository, PedidoRepository pedidoRepository) {
+    public MetodoPagoServiceImpl(MetodoPagoRepository metodoPagoRepository, PedidoRepository pedidoRepository, PasswordEncoder passwordEncoder) {
         this.metodoPagoRepository = metodoPagoRepository;
         this.pedidoRepository = pedidoRepository;
+        this.passwordEncoder = passwordEncoder;  
     }
 
     @Override
     public MetodoPago crearMetodoPago(MetodoPago metodoPago) {
         if (metodoPago.getTipoPago() == MetodoPago.TipoPago.CREDITO || metodoPago.getTipoPago() == MetodoPago.TipoPago.DEBITO) {
             validarDatosTarjeta(metodoPago);
-            metodoPago.setCodigoSeguridad(null); // Eliminar el CVV antes de guardar
+            metodoPago.setCodigoSeguridad(passwordEncoder.encode(metodoPago.getCodigoSeguridad()));
         }
         return metodoPagoRepository.save(metodoPago);
     }
