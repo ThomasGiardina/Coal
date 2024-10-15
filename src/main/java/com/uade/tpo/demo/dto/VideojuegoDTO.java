@@ -2,6 +2,9 @@ package com.uade.tpo.demo.dto;
 
 import com.uade.tpo.demo.entity.Videojuego.CategoriaJuego;
 import lombok.Data;
+import java.time.LocalDate;
+import java.util.List;
+import java.util.Set;
 
 @Data
 public class VideojuegoDTO {
@@ -10,10 +13,11 @@ public class VideojuegoDTO {
     private String descripcion;
     private Double precio;
     private String plataforma;
-    private CategoriaJuego categoria;
+    private Set<CategoriaJuego> categorias;
     private Integer stock;
-
-    // Nuevos campos para almacenar las imágenes en formato Base64
-    private String foto;  // Imagen principal en formato Base64
-    private String foto2;  // Imagen secundaria en formato Base64
+    private String foto;
+    private String foto2;
+    private List<String> carrusel;
+    private LocalDate fechaLanzamiento;
+    private String desarrolladora;
 }

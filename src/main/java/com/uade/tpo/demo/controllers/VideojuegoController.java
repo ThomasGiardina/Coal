@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.util.Base64;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -37,14 +38,7 @@ public class VideojuegoController {
     @PostMapping
     public ResponseEntity<VideojuegoDTO> crearVideojuego(
         @RequestHeader("Authorization") String token,
-        @RequestParam("titulo") String titulo,
-        @RequestParam("descripcion") String descripcion,
-        @RequestParam("precio") Double precio,
-        @RequestParam("plataforma") String plataforma,
-        @RequestParam("categoria") CategoriaJuego categoria,
-        @RequestParam("stock") Integer stock,
-        @RequestParam(value = "foto", required = false) MultipartFile foto,
-        @RequestParam(value = "foto2", required = false) MultipartFile foto2
+        @RequestBody VideojuegoDTO videojuegoDTO
     ) {
         try {
             // Validar token y usuario con rol ADMIN
@@ -59,15 +53,17 @@ public class VideojuegoController {
 
             // Crear el objeto videojuego
             Videojuego videojuego = new Videojuego();
-            videojuego.setTitulo(titulo);
-            videojuego.setDescripcion(descripcion);
-            videojuego.setPrecio(precio);
-            videojuego.setPlataforma(plataforma);
-            videojuego.setCategoria(categoria);
-            videojuego.setStock(stock);
+            videojuego.setTitulo(videojuegoDTO.getTitulo());
+            videojuego.setDescripcion(videojuegoDTO.getDescripcion());
+            videojuego.setPrecio(videojuegoDTO.getPrecio());
+            videojuego.setPlataforma(videojuegoDTO.getPlataforma());
+            videojuego.setCategorias(videojuegoDTO.getCategorias());
+            videojuego.setStock(videojuegoDTO.getStock());
+            videojuego.setFechaLanzamiento(videojuegoDTO.getFechaLanzamiento());
+            videojuego.setDesarrolladora(videojuegoDTO.getDesarrolladora());
 
-            // Guardar el videojuego y las imágenes como bytes
-            videojuegoService.crearVideojuego(videojuego, foto, foto2);
+            // Guardar el videojuego sin imágenes
+            videojuegoService.crearVideojuego(videojuego);
 
             // Retornar el DTO del videojuego creado
             return ResponseEntity.ok(convertirADTO(videojuego));
@@ -76,11 +72,6 @@ public class VideojuegoController {
             // Captura de errores de validación como "Usuario no encontrado"
             return ResponseEntity.status(400).body(null); // Bad Request
 
-        } catch (IOException e) {
-            // Captura de errores relacionados con la carga de archivos
-            e.printStackTrace(); // Imprime el error en los logs del servidor para depuración
-            return ResponseEntity.status(500).body(null); // Internal Server Error
-
         } catch (Exception e) {
             // Captura de cualquier otra excepción inesperada
             e.printStackTrace(); // Imprime el error en los logs del servidor para depuración
@@ -88,7 +79,26 @@ public class VideojuegoController {
         }
     }
 
+    // Endpoint para subir la imagen principal
+    @PostMapping("/{id}/foto")
+    public ResponseEntity<VideojuegoDTO> subirFoto(@PathVariable Long id, @RequestParam("foto") MultipartFile foto) throws IOException {
+        Videojuego videojuego = videojuegoService.subirFoto(id, foto);
+        return ResponseEntity.ok(convertirADTO(videojuego));
+    }
 
+    // Endpoint para subir la segunda imagen
+    @PostMapping("/{id}/foto2")
+    public ResponseEntity<VideojuegoDTO> subirFoto2(@PathVariable Long id, @RequestParam("foto2") MultipartFile foto2) throws IOException {
+        Videojuego videojuego = videojuegoService.subirFoto2(id, foto2);
+        return ResponseEntity.ok(convertirADTO(videojuego));
+    }
+
+    // Endpoint para subir las imágenes del carrusel
+    @PostMapping("/{id}/carrusel")
+    public ResponseEntity<VideojuegoDTO> subirCarrusel(@PathVariable Long id, @RequestParam("carrusel") List<MultipartFile> carrusel) throws IOException {
+        Videojuego videojuego = videojuegoService.subirCarrusel(id, carrusel);
+        return ResponseEntity.ok(convertirADTO(videojuego));
+    }
 
     // Obtener un videojuego por ID
     @GetMapping("/{id}")
@@ -120,18 +130,6 @@ public class VideojuegoController {
     public ResponseEntity<Void> eliminarVideojuego(@RequestBody IdRequest idRequest) {
         videojuegoService.eliminarVideojuego(idRequest.getId());
         return ResponseEntity.noContent().build();
-    }
-
-    @PostMapping("/{id}/foto")
-    public ResponseEntity<VideojuegoDTO> subirFoto(@PathVariable Long id, @RequestParam("foto") MultipartFile foto) throws IOException {
-        Videojuego videojuego = videojuegoService.subirFoto(id, foto);
-        return ResponseEntity.ok(convertirADTO(videojuego));
-    }
-
-    @PostMapping("/{id}/foto2")
-    public ResponseEntity<VideojuegoDTO> subirFoto2(@PathVariable Long id, @RequestParam("foto2") MultipartFile foto2) throws IOException {
-        Videojuego videojuego = videojuegoService.subirFoto2(id, foto2);
-        return ResponseEntity.ok(convertirADTO(videojuego));
     }
 
     // Agregar stock a un videojuego
@@ -187,9 +185,16 @@ public class VideojuegoController {
         dto.setDescripcion(videojuego.getDescripcion());
         dto.setPrecio(videojuego.getPrecio());
         dto.setPlataforma(videojuego.getPlataforma());
-        dto.setCategoria(videojuego.getCategoria());
+        dto.setCategorias(videojuego.getCategorias());
         dto.setStock(videojuego.getStock());
-        // No incluir fotoUrl ni fotoUrl2 en el DTO ya que son datos binarios
+        dto.setFechaLanzamiento(videojuego.getFechaLanzamiento());
+        dto.setDesarrolladora(videojuego.getDesarrolladora());
+        // Convert byte arrays to Base64 strings for the DTO
+        dto.setFoto(videojuego.getFoto() != null ? Base64.getEncoder().encodeToString(videojuego.getFoto()) : null);
+        dto.setFoto2(videojuego.getFoto2() != null ? Base64.getEncoder().encodeToString(videojuego.getFoto2()) : null);
+        dto.setCarrusel(videojuego.getCarrusel() != null ? videojuego.getCarrusel().stream()
+                .map(bytes -> Base64.getEncoder().encodeToString(bytes))
+                .collect(Collectors.toList()) : null);
         return dto;
     }
 
@@ -201,9 +206,16 @@ public class VideojuegoController {
         videojuego.setDescripcion(dto.getDescripcion());
         videojuego.setPrecio(dto.getPrecio());
         videojuego.setPlataforma(dto.getPlataforma());
-        videojuego.setCategoria(dto.getCategoria());
+        videojuego.setCategorias(dto.getCategorias());
         videojuego.setStock(dto.getStock());
-        // No incluir setFotoUrl ni setFotoUrl2 ya que las imágenes no están en el DTO
+        videojuego.setFechaLanzamiento(dto.getFechaLanzamiento());
+        videojuego.setDesarrolladora(dto.getDesarrolladora());
+        // Convert Base64 strings to byte arrays for the entity
+        videojuego.setFoto(dto.getFoto() != null ? Base64.getDecoder().decode(dto.getFoto()) : null);
+        videojuego.setFoto2(dto.getFoto() != null ? Base64.getDecoder().decode(dto.getFoto2()) : null);
+        videojuego.setCarrusel(dto.getCarrusel() != null ? dto.getCarrusel().stream()
+                .map(Base64.getDecoder()::decode)
+                .collect(Collectors.toList()) : null);
         return videojuego;
     }
 

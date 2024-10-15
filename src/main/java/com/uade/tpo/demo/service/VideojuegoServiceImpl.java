@@ -16,6 +16,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -34,20 +35,6 @@ public class VideojuegoServiceImpl implements VideojuegoService {
     public Videojuego crearVideojuego(Videojuego videojuego) {
         return videojuegoRepository.save(videojuego);
     }
-
-    @Override
-    public Videojuego crearVideojuego(Videojuego videojuego, MultipartFile foto, MultipartFile foto2) throws IOException {
-        if (foto != null && !foto.isEmpty()) {
-            videojuego.setFoto(foto.getBytes());  
-        }
-
-        if (foto2 != null && !foto2.isEmpty()) {
-            videojuego.setFoto2(foto2.getBytes());  
-        }
-
-        return videojuegoRepository.save(videojuego);  
-    }
-
 
     @Override
     public Videojuego obtenerVideojuegoPorId(Long videojuegoId) throws VideojuegoNotFoundException {
@@ -119,7 +106,7 @@ public class VideojuegoServiceImpl implements VideojuegoService {
     }
 
     public List<Videojuego> buscarPorCategoria(CategoriaJuego categoria) {
-        return videojuegoRepository.findByCategoria(categoria);
+        return videojuegoRepository.findByCategorias(categoria);
     }
 
     @Override
@@ -136,6 +123,16 @@ public class VideojuegoServiceImpl implements VideojuegoService {
         return videojuegoRepository.save(videojuego);
     }
 
+    @Override
+    public Videojuego subirCarrusel(Long videojuegoId, List<MultipartFile> carrusel) throws IOException, VideojuegoNotFoundException {
+        Videojuego videojuego = obtenerVideojuegoPorId(videojuegoId);
+        List<byte[]> carruselBytes = new ArrayList<>();
+        for (MultipartFile file : carrusel) {
+            carruselBytes.add(file.getBytes());
+        }
+        videojuego.setCarrusel(carruselBytes);
+        return videojuegoRepository.save(videojuego);
+    }
 
     private String guardarFoto(MultipartFile foto) throws IOException {
     String folder = "fotos/";

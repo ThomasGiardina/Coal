@@ -24,5 +24,5 @@ public interface VideojuegoRepository extends JpaRepository<Videojuego, Long> {
     @Query("SELECT v FROM Videojuego v WHERE v.descripcion LIKE %?1%")
     List<Videojuego> findByDescripcionContaining(String keyword);
 
-    List<Videojuego> findByCategoria(CategoriaJuego categoria);
+    List<Videojuego> findByCategorias(CategoriaJuego categoria);
 }
