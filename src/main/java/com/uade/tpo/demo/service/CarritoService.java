@@ -6,10 +6,13 @@ import com.uade.tpo.demo.dao.ItemCarritoDAO;
 import com.uade.tpo.demo.entity.Carrito;
 import com.uade.tpo.demo.entity.ItemCarrito;
 import com.uade.tpo.demo.entity.Videojuego;
+import com.uade.tpo.demo.exception.ResourceNotFoundException;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import java.util.Optional;
 
 @Service
 public class CarritoService {
@@ -78,5 +81,13 @@ public class CarritoService {
         }
         carrito.getItems().clear();
         carritoDAO.save(carrito);
+    }
+
+    public Carrito getCarritoByUsuarioId(Long usuarioId) {
+        Optional<Carrito> optionalCarrito = carritoDAO.findByUsuarioId(usuarioId);
+        if (!optionalCarrito.isPresent()) {
+            throw new ResourceNotFoundException("Carrito no encontrado para el usuario");
+        }
+        return optionalCarrito.get();
     }
 }

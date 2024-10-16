@@ -38,7 +38,9 @@ public class VideojuegoController {
     @PostMapping
     public ResponseEntity<VideojuegoDTO> crearVideojuego(
         @RequestHeader("Authorization") String token,
-        @RequestBody VideojuegoDTO videojuegoDTO
+        @RequestPart("videojuego") VideojuegoDTO videojuegoDTO,  // Aquí manejas los datos del videojuego
+        @RequestPart(value = "foto", required = false) MultipartFile foto, // Aquí manejas el archivo de imagen principal
+        @RequestPart(value = "foto2", required = false) MultipartFile foto2 // Aquí manejas el archivo de imagen secundaria
     ) {
         try {
             // Validar token y usuario con rol ADMIN
@@ -62,7 +64,15 @@ public class VideojuegoController {
             videojuego.setFechaLanzamiento(videojuegoDTO.getFechaLanzamiento());
             videojuego.setDesarrolladora(videojuegoDTO.getDesarrolladora());
 
-            // Guardar el videojuego sin imágenes
+            // Si las imágenes fueron subidas, guárdalas
+            if (foto != null && !foto.isEmpty()) {
+                videojuego.setFoto(foto.getBytes());  // Guardar la imagen principal
+            }
+            if (foto2 != null && !foto2.isEmpty()) {
+                videojuego.setFoto2(foto2.getBytes());  // Guardar la imagen secundaria
+            }
+
+            // Guardar el videojuego
             videojuegoService.crearVideojuego(videojuego);
 
             // Retornar el DTO del videojuego creado
@@ -78,6 +88,7 @@ public class VideojuegoController {
             return ResponseEntity.status(500).body(null); // Internal Server Error
         }
     }
+
 
     // Endpoint para subir la imagen principal
     @PostMapping("/{id}/foto")
