@@ -90,4 +90,11 @@ public class CarritoService {
         }
         return optionalCarrito.get();
     }
+
+    public void updateItemQuantity(Long carritoId, Long itemId, int nuevaCantidad) {
+        ItemCarrito item = itemCarritoDAO.findById(itemId).orElseThrow(() -> new ResourceNotFoundException("Item no encontrado"));
+        item.setCantidad(nuevaCantidad);
+        itemCarritoDAO.save(item);
+    }
+    
 }

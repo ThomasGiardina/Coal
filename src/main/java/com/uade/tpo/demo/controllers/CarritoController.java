@@ -114,23 +114,49 @@ public class CarritoController {
 
     @GetMapping("/usuarios/carrito")
     public ResponseEntity<Carrito> getCarritoByUsuarioId(@RequestHeader("Authorization") String token) {
-        String jwt = token.substring(7);
-        String userEmail = jwtService.extractUsername(jwt);
+        try {
+            // Extraer el token JWT y obtener el email del usuario
+            String jwt = token.substring(7);
+            String userEmail = jwtService.extractUsername(jwt);
+            
+            // Obtener el usuario por su email
+            Usuario usuario = userRepository.findByEmail(userEmail)
+                    .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado"));
+            
+            // Imprimir el ID del usuario
+            logger.info("ID del usuario autenticado: " + usuario.getId());
+            
+            // Buscar el carrito del usuario
+            Carrito carrito = carritoService.getCarritoByUsuarioId(usuario.getId());
+            
+            if (carrito == null) {
+                logger.info("No se encontró el carrito para el usuario con ID: " + usuario.getId());
+                return ResponseEntity.notFound().build();
+            }
 
-        Usuario usuario = userRepository.findByEmail(userEmail)
-                .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado"));
+            // Imprimir el ID del carrito encontrado
+            logger.info("Carrito encontrado con ID: " + carrito.getId());
 
-        Carrito carrito = carritoService.getCarritoByUsuarioId(usuario.getId());
-
-        if (carrito == null) {
-            logger.info("No se encontró el carrito para el usuario con ID: " + usuario.getId());
-            return ResponseEntity.notFound().build();
+            return ResponseEntity.ok(carrito);
+        } catch (Exception e) {
+            logger.error("Error obteniendo el carrito para el usuario", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
-
-        // Imprimir el carrito obtenido
-        logger.info("Carrito obtenido para el usuario con ID: " + usuario.getId());
-        logger.info("Detalles del carrito: " + carrito.toString());
-
-        return ResponseEntity.ok(carrito);
     }
+
+
+    @PutMapping("/carritos/{carritoId}/items/{itemId}")
+    public ResponseEntity<?> updateItemQuantity(
+            @PathVariable Long carritoId, 
+            @PathVariable Long itemId, 
+            @RequestBody int nuevaCantidad) {
+        
+        try {
+            carritoService.updateItemQuantity(carritoId, itemId, nuevaCantidad);
+            return ResponseEntity.ok("Cantidad actualizada correctamente");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error al actualizar la cantidad");
+        }
+    }
+
 }
