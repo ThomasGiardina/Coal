@@ -130,10 +130,55 @@ public class VideojuegoController {
 
     // Actualizar un videojuego existente
     @PutMapping("/{id}")
-    public ResponseEntity<VideojuegoDTO> actualizarVideojuego(@PathVariable Long id, @RequestBody VideojuegoDTO videojuegoDTO) {
-        Videojuego datosActualizados = convertirAEntidad(videojuegoDTO);
-        Videojuego videojuegoActualizado = videojuegoService.actualizarVideojuego(id, datosActualizados);
-        return ResponseEntity.ok(convertirADTO(videojuegoActualizado));
+    public ResponseEntity<VideojuegoDTO> actualizarVideojuego(
+            @RequestHeader("Authorization") String token,
+            @PathVariable Long id,
+            @RequestPart("videojuego") VideojuegoDTO videojuegoDTO, 
+            @RequestPart(value = "foto", required = false) MultipartFile foto,  
+            @RequestPart(value = "foto2", required = false) MultipartFile foto2  
+    ) {
+        try {
+            String jwt = token.substring(7);
+            String userEmail = jwtService.extractUsername(jwt);
+            Usuario usuario = userRepository.findByEmail(userEmail)
+                    .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado"));
+
+            if (!usuario.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_ADMIN"))) {
+                return ResponseEntity.status(403).build(); 
+            }
+
+            // Obtener el videojuego existente por ID
+            Videojuego videojuegoExistente = videojuegoService.obtenerVideojuegoPorId(id);
+
+            // Actualizar los campos del videojuego con los nuevos datos
+            videojuegoExistente.setTitulo(videojuegoDTO.getTitulo());
+            videojuegoExistente.setDescripcion(videojuegoDTO.getDescripcion());
+            videojuegoExistente.setPrecio(videojuegoDTO.getPrecio());
+            videojuegoExistente.setPlataforma(videojuegoDTO.getPlataforma());
+            videojuegoExistente.setCategorias(videojuegoDTO.getCategorias());
+            videojuegoExistente.setStock(videojuegoDTO.getStock());
+            videojuegoExistente.setFechaLanzamiento(videojuegoDTO.getFechaLanzamiento());
+            videojuegoExistente.setDesarrolladora(videojuegoDTO.getDesarrolladora());
+
+            if (foto != null && !foto.isEmpty()) {
+                videojuegoExistente.setFoto(foto.getBytes());
+            }
+            if (foto2 != null && !foto2.isEmpty()) {
+                videojuegoExistente.setFoto2(foto2.getBytes());
+            }
+
+            // Guardar el videojuego actualizado en la base de datos
+            Videojuego videojuegoActualizado = videojuegoService.actualizarVideojuego(id, videojuegoExistente);
+
+            return ResponseEntity.ok(convertirADTO(videojuegoActualizado));
+
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(400).body(null); 
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(500).body(null); 
+        }
     }
 
     // Eliminar un videojuego por ID
