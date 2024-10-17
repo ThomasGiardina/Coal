@@ -61,6 +61,9 @@ public class Videojuego {
     @ElementCollection
     private List<byte[]> carrusel;
 
+    @Column(nullable = false)
+    private int ventas;
+
     public enum CategoriaJuego{
         ACCION,
         AVENTURA,

@@ -25,4 +25,7 @@ public interface VideojuegoRepository extends JpaRepository<Videojuego, Long> {
     List<Videojuego> findByDescripcionContaining(String keyword);
 
     List<Videojuego> findByCategorias(CategoriaJuego categoria);
+
+    List<Videojuego> findTop10ByOrderByVentasDesc();
+    
 }

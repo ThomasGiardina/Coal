@@ -38,9 +38,7 @@ public class VideojuegoController {
     @PostMapping
     public ResponseEntity<VideojuegoDTO> crearVideojuego(
         @RequestHeader("Authorization") String token,
-        @RequestPart("videojuego") VideojuegoDTO videojuegoDTO,  // Aquí manejas los datos del videojuego
-        @RequestPart(value = "foto", required = false) MultipartFile foto, // Aquí manejas el archivo de imagen principal
-        @RequestPart(value = "foto2", required = false) MultipartFile foto2 // Aquí manejas el archivo de imagen secundaria
+        @RequestBody VideojuegoDTO videojuegoDTO  // Aquí manejas los datos del videojuego en formato JSON
     ) {
         try {
             // Validar token y usuario con rol ADMIN
@@ -63,14 +61,6 @@ public class VideojuegoController {
             videojuego.setStock(videojuegoDTO.getStock());
             videojuego.setFechaLanzamiento(videojuegoDTO.getFechaLanzamiento());
             videojuego.setDesarrolladora(videojuegoDTO.getDesarrolladora());
-
-            // Si las imágenes fueron subidas, guárdalas
-            if (foto != null && !foto.isEmpty()) {
-                videojuego.setFoto(foto.getBytes());  // Guardar la imagen principal
-            }
-            if (foto2 != null && !foto2.isEmpty()) {
-                videojuego.setFoto2(foto2.getBytes());  // Guardar la imagen secundaria
-            }
 
             // Guardar el videojuego
             videojuegoService.crearVideojuego(videojuego);
@@ -133,9 +123,7 @@ public class VideojuegoController {
     public ResponseEntity<VideojuegoDTO> actualizarVideojuego(
             @RequestHeader("Authorization") String token,
             @PathVariable Long id,
-            @RequestPart("videojuego") VideojuegoDTO videojuegoDTO, 
-            @RequestPart(value = "foto", required = false) MultipartFile foto,  
-            @RequestPart(value = "foto2", required = false) MultipartFile foto2  
+            @RequestBody VideojuegoDTO videojuegoDTO  // Aquí manejas los datos del videojuego en formato JSON
     ) {
         try {
             String jwt = token.substring(7);
@@ -159,13 +147,6 @@ public class VideojuegoController {
             videojuegoExistente.setStock(videojuegoDTO.getStock());
             videojuegoExistente.setFechaLanzamiento(videojuegoDTO.getFechaLanzamiento());
             videojuegoExistente.setDesarrolladora(videojuegoDTO.getDesarrolladora());
-
-            if (foto != null && !foto.isEmpty()) {
-                videojuegoExistente.setFoto(foto.getBytes());
-            }
-            if (foto2 != null && !foto2.isEmpty()) {
-                videojuegoExistente.setFoto2(foto2.getBytes());
-            }
 
             // Guardar el videojuego actualizado en la base de datos
             Videojuego videojuegoActualizado = videojuegoService.actualizarVideojuego(id, videojuegoExistente);

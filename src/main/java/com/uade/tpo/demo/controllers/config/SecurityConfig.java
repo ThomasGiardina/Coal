@@ -42,6 +42,7 @@ public class SecurityConfig {
                 .requestMatchers("/Historial/**").hasAnyRole("ADMIN", "USER")
                 .requestMatchers("/fotos/**").hasRole("ADMIN")
                 .requestMatchers("/api/usuario/**").hasAnyRole("USER", "ADMIN")
+                .requestMatchers("/api/estadisticas/**").hasRole("ADMIN")
                 .anyRequest().authenticated()) 
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))  
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class); 

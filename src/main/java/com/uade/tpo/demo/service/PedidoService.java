@@ -22,6 +22,7 @@ import com.uade.tpo.demo.repository.PedidoRepository;
 import com.uade.tpo.demo.repository.EventosHistorialRepository;
 import com.uade.tpo.demo.repository.HistorialPedidosRepository;
 import com.uade.tpo.demo.repository.MetodoPagoRepository;
+import com.uade.tpo.demo.repository.VideojuegoRepository;
 
 import jakarta.transaction.Transactional;
 
@@ -48,6 +49,9 @@ public class PedidoService {
 
     @Autowired
     private EventosHistorialRepository eventosHistorialRepository;
+
+    @Autowired
+    private VideojuegoRepository videojuegoRepository;
 
     @Transactional
     public Pedido crearPedido(Carrito carrito, Usuario usuario) {
@@ -256,7 +260,15 @@ public class PedidoService {
 
         pedido.setMetodoPago(metodoPago);
         pedido.setEstado(EstadoPedido.CONFIRMADO);
-        return pedidoRepository.save(pedido);
+        Pedido pedidoConfirmado = pedidoRepository.save(pedido);
+
+        for (ItemPedido item : pedido.getProductosAdquiridos()) {
+            Videojuego videojuego = item.getVideojuego();
+            videojuego.setVentas(videojuego.getVentas() + item.getCantidad());
+            videojuegoRepository.save(videojuego);
+        }
+        
+        return pedidoConfirmado;
     }
 
     private void validarCVV(String cvv) {
