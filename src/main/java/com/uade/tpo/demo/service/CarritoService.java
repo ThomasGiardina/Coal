@@ -1,4 +1,3 @@
-// CarritoService.java
 package com.uade.tpo.demo.service;
 
 import com.uade.tpo.demo.dao.CarritoDAO;
@@ -49,6 +48,7 @@ public class CarritoService {
                 item.setCarrito(carrito);
                 item.setTitulo(videojuego.getTitulo());
                 item.setPrecio(videojuego.getPrecio());
+                item.setPlataforma(videojuego.getPlataforma());
                 carrito.getItems().add(item);
                 itemCarritoDAO.save(item);
             }
@@ -92,9 +92,19 @@ public class CarritoService {
     }
 
     public void updateItemQuantity(Long carritoId, Long itemId, int nuevaCantidad) {
-        ItemCarrito item = itemCarritoDAO.findById(itemId).orElseThrow(() -> new ResourceNotFoundException("Item no encontrado"));
+        Carrito carrito = carritoDAO.findById(carritoId)
+                .orElseThrow(() -> new ResourceNotFoundException("Carrito no encontrado"));
+
+        ItemCarrito item = carrito.getItems().stream()
+                .filter(i -> i.getId().equals(itemId))
+                .findFirst()
+                .orElseThrow(() -> new ResourceNotFoundException("Item no encontrado"));
+
         item.setCantidad(nuevaCantidad);
         itemCarritoDAO.save(item);
     }
+    
+    
+    
     
 }

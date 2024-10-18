@@ -24,4 +24,6 @@ public class ItemCarrito {
 
     private String titulo;
     private Double precio;
+
+    private String plataforma;
 }
