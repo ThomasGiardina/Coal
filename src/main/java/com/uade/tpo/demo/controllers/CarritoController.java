@@ -55,30 +55,24 @@ public class CarritoController {
     @PostMapping("/{carritoId}/items")
     public ResponseEntity<?> addItemToCarrito(@PathVariable Long carritoId, @RequestHeader("Authorization") String token, @RequestBody ItemCarritoDTO itemCarritoDTO) {
         try {
-            // Extraer el usuario desde el token JWT
-            String jwt = token.substring(7); // Ignorar "Bearer "
+            String jwt = token.substring(7); 
             String userEmail = jwtService.extractUsername(jwt);
 
-            // Obtener el usuario
             Usuario usuario = userRepository.findByEmail(userEmail)
                     .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado"));
 
-            // Obtener el carrito del usuario
             Carrito carrito = carritoService.getCarritoById(carritoId);
             if (carrito == null) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Carrito no encontrado");
             }
 
-            // Obtenemos el videojuego
             Videojuego videojuego = videojuegoService.obtenerVideojuegoPorId(itemCarritoDTO.getVideojuegoId());
             if (videojuego == null) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Videojuego no encontrado");
             }
 
-            // Agregar el videojuego al carrito del usuario
             carritoService.addItemToCarrito(carrito.getId(), videojuego, itemCarritoDTO.getCantidad());
 
-            // Aquí devolvemos un JSON válido
             return ResponseEntity.ok(Collections.singletonMap("message", "Item agregado al carrito"));
 
         } catch (Exception e) {
@@ -87,10 +81,18 @@ public class CarritoController {
         }
     }
 
+    
     @DeleteMapping("/items/{itemId}")
-    public void removeItemFromCarrito(@PathVariable Long itemId) {
-        carritoService.removeItemFromCarrito(itemId);
+    public ResponseEntity<?> removeItemFromCarrito(@PathVariable Long itemId) {
+        try {
+            carritoService.removeItemFromCarrito(itemId);
+            return ResponseEntity.ok(Collections.singletonMap("message", "Item eliminado del carrito"));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error al eliminar el producto");
+        }
     }
+
+
 
     @PostMapping("/confirmar/{carritoId}")
     public ResponseEntity<Pedido> confirmarCarrito(@PathVariable Long carritoId) {
@@ -103,7 +105,6 @@ public class CarritoController {
         Usuario usuario = carrito.getUsuario();
         Pedido pedido = pedidoService.crearPedido(carrito, usuario);
 
-        // Restar la cantidad de videojuegos del stock
         carrito.getItems().forEach(item -> {
             Videojuego videojuego = item.getVideojuego();
             if (videojuego.getStock() < item.getCantidad()) {
@@ -113,7 +114,7 @@ public class CarritoController {
             videojuegoService.actualizarVideojuego(videojuego.getId(), videojuego);
         });
 
-        carritoService.vaciarCarrito(carrito); // Vaciar el carrito después de confirmar la compra
+        carritoService.vaciarCarrito(carrito); 
 
         return ResponseEntity.ok(pedido);
     }
@@ -121,18 +122,14 @@ public class CarritoController {
     @GetMapping("/usuarios/carrito")
     public ResponseEntity<?> getCarritoByUsuarioId(@RequestHeader("Authorization") String token) {
         try {
-            // Extraer el token JWT y obtener el email del usuario
             String jwt = token.substring(7);
             String userEmail = jwtService.extractUsername(jwt);
 
-            // Obtener el usuario por su email
             Usuario usuario = userRepository.findByEmail(userEmail)
                     .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado"));
 
-            // Imprimir el ID del usuario
             logger.info("ID del usuario autenticado: " + usuario.getId());
 
-            // Buscar el carrito del usuario
             Carrito carrito = carritoService.getCarritoByUsuarioId(usuario.getId());
 
             if (carrito == null) {
@@ -140,20 +137,19 @@ public class CarritoController {
                 return ResponseEntity.notFound().build();
             }
 
-            // Crear una lista de ItemCarritoDTO con todos los detalles de los ítems
             List<ItemCarritoDTO> itemsDTO = carrito.getItems().stream().map(item -> {
                 ItemCarritoDTO dto = new ItemCarritoDTO();
-                dto.setId(item.getId());  // Incluir el ID del ítem
-                dto.setCarritoId(carrito.getId());  // ID del carrito
+                dto.setId(item.getId());  
+                dto.setCarritoId(carrito.getId());  
                 dto.setTitulo(item.getTitulo());
                 dto.setCantidad(item.getCantidad());
                 dto.setPrecio(item.getPrecio());
-                dto.setVideojuegoId(item.getVideojuego().getId());  // ID del videojuego
+                dto.setVideojuegoId(item.getVideojuego().getId());  
                 dto.setPlataforma(item.getPlataforma());
                 return dto;
             }).collect(Collectors.toList());
 
-            // Retornar la respuesta con los detalles del carrito
+
             return ResponseEntity.ok(itemsDTO);
         } catch (Exception e) {
             logger.error("Error obteniendo el carrito para el usuario", e);
@@ -170,7 +166,7 @@ public class CarritoController {
             @RequestBody Map<String, Integer> payload) {
         try {
             int nuevaCantidad = payload.get("cantidad");
-            carritoService.updateItemQuantity(carritoId, itemId, nuevaCantidad);  // Verifica que este método exista y funcione
+            carritoService.updateItemQuantity(carritoId, itemId, nuevaCantidad);  
             return ResponseEntity.ok("Cantidad actualizada correctamente");
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error al actualizar la cantidad");

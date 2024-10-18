@@ -59,19 +59,12 @@ public class CarritoService {
     public void removeItemFromCarrito(Long itemId) {
         ItemCarrito item = itemCarritoDAO.findById(itemId).orElse(null);
         if (item != null) {
-            if (item.getCantidad() > 1) {
-                item.setCantidad(item.getCantidad() - 1);
-                itemCarritoDAO.save(item);
-                logger.info("Reduced quantity of item with ID {} in carrito with ID {}", itemId, item.getCarrito().getId());
-            } else {
-                Carrito carrito = item.getCarrito();
-                carrito.getItems().remove(item);
-                itemCarritoDAO.delete(item);
-                carritoDAO.save(carrito);
-                logger.info("Item with ID {} removed from carrito with ID {}", itemId, carrito.getId());
-            }
+            Carrito carrito = item.getCarrito();
+            carrito.getItems().remove(item);
+            itemCarritoDAO.delete(item);
+            carritoDAO.save(carrito);
         } else {
-            logger.warn("Item with ID {} not found", itemId);
+            throw new ResourceNotFoundException("Item no encontrado");
         }
     }
 
