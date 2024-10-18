@@ -43,7 +43,6 @@ public class VideojuegoController {
         @RequestParam(value = "foto2", required = false) MultipartFile foto2
     ) {
         try {
-            // Validación de token y lógica de rol ADMIN...
 
             ObjectMapper objectMapper = new ObjectMapper();
             VideojuegoDTO videojuegoDTO = objectMapper.readValue(videojuegoJson, VideojuegoDTO.class);
@@ -115,11 +114,13 @@ public class VideojuegoController {
     }
 
     // Actualizar un videojuego existente
-    @PutMapping("/{id}")
+    @PutMapping(value = "/{id}", consumes = "multipart/form-data")
     public ResponseEntity<VideojuegoDTO> actualizarVideojuego(
             @RequestHeader("Authorization") String token,
             @PathVariable Long id,
-            @RequestBody VideojuegoDTO videojuegoDTO 
+            @RequestParam("videojuego") String videojuegoJson, 
+            @RequestParam(value = "foto", required = false) MultipartFile foto,  
+            @RequestParam(value = "foto2", required = false) MultipartFile foto2 
     ) {
         try {
             String jwt = token.substring(7);
@@ -131,10 +132,11 @@ public class VideojuegoController {
                 return ResponseEntity.status(403).build(); 
             }
 
-            // Obtener el videojuego existente por ID
             Videojuego videojuegoExistente = videojuegoService.obtenerVideojuegoPorId(id);
 
-            // Actualizar los campos del videojuego con los nuevos datos
+            ObjectMapper objectMapper = new ObjectMapper();
+            VideojuegoDTO videojuegoDTO = objectMapper.readValue(videojuegoJson, VideojuegoDTO.class);
+
             videojuegoExistente.setTitulo(videojuegoDTO.getTitulo());
             videojuegoExistente.setDescripcion(videojuegoDTO.getDescripcion());
             videojuegoExistente.setPrecio(videojuegoDTO.getPrecio());
@@ -144,7 +146,14 @@ public class VideojuegoController {
             videojuegoExistente.setFechaLanzamiento(videojuegoDTO.getFechaLanzamiento());
             videojuegoExistente.setDesarrolladora(videojuegoDTO.getDesarrolladora());
 
-            // Guardar el videojuego actualizado en la base de datos
+            if (foto != null && !foto.isEmpty()) {
+                videojuegoExistente.setFoto(foto.getBytes());
+            }
+
+            if (foto2 != null && !foto2.isEmpty()) {
+                videojuegoExistente.setFoto2(foto2.getBytes());
+            }
+
             Videojuego videojuegoActualizado = videojuegoService.actualizarVideojuego(id, videojuegoExistente);
 
             return ResponseEntity.ok(convertirADTO(videojuegoActualizado));
@@ -157,6 +166,10 @@ public class VideojuegoController {
             return ResponseEntity.status(500).body(null); 
         }
     }
+
+
+
+
 
     // Eliminar un videojuego por ID
     @DeleteMapping("/{id}")
