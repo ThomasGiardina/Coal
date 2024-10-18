@@ -10,6 +10,12 @@ import com.uade.tpo.demo.exception.InsufficientStockException;
 import com.uade.tpo.demo.service.CarritoService;
 import com.uade.tpo.demo.service.PedidoService;
 import com.uade.tpo.demo.service.VideojuegoService;
+
+import java.util.Map;
+
+import java.util.List;
+import java.util.stream.Collectors;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -113,31 +119,42 @@ public class CarritoController {
     }
 
     @GetMapping("/usuarios/carrito")
-    public ResponseEntity<Carrito> getCarritoByUsuarioId(@RequestHeader("Authorization") String token) {
+    public ResponseEntity<?> getCarritoByUsuarioId(@RequestHeader("Authorization") String token) {
         try {
             // Extraer el token JWT y obtener el email del usuario
             String jwt = token.substring(7);
             String userEmail = jwtService.extractUsername(jwt);
-            
+
             // Obtener el usuario por su email
             Usuario usuario = userRepository.findByEmail(userEmail)
                     .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado"));
-            
+
             // Imprimir el ID del usuario
             logger.info("ID del usuario autenticado: " + usuario.getId());
-            
+
             // Buscar el carrito del usuario
             Carrito carrito = carritoService.getCarritoByUsuarioId(usuario.getId());
-            
+
             if (carrito == null) {
                 logger.info("No se encontró el carrito para el usuario con ID: " + usuario.getId());
                 return ResponseEntity.notFound().build();
             }
 
-            // Imprimir el ID del carrito encontrado
-            logger.info("Carrito encontrado con ID: " + carrito.getId());
+            // Crear una lista de ItemCarritoDTO con todos los detalles de los ítems
+            List<ItemCarritoDTO> itemsDTO = carrito.getItems().stream().map(item -> {
+                ItemCarritoDTO dto = new ItemCarritoDTO();
+                dto.setId(item.getId());  // Incluir el ID del ítem
+                dto.setCarritoId(carrito.getId());  // ID del carrito
+                dto.setTitulo(item.getTitulo());
+                dto.setCantidad(item.getCantidad());
+                dto.setPrecio(item.getPrecio());
+                dto.setVideojuegoId(item.getVideojuego().getId());  // ID del videojuego
+                dto.setPlataforma(item.getPlataforma());
+                return dto;
+            }).collect(Collectors.toList());
 
-            return ResponseEntity.ok(carrito);
+            // Retornar la respuesta con los detalles del carrito
+            return ResponseEntity.ok(itemsDTO);
         } catch (Exception e) {
             logger.error("Error obteniendo el carrito para el usuario", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
@@ -145,18 +162,22 @@ public class CarritoController {
     }
 
 
-    @PutMapping("/carritos/{carritoId}/items/{itemId}")
+
+    @PutMapping("/{carritoId}/items/{itemId}")
     public ResponseEntity<?> updateItemQuantity(
-            @PathVariable Long carritoId, 
-            @PathVariable Long itemId, 
-            @RequestBody int nuevaCantidad) {
-        
+            @PathVariable Long carritoId,
+            @PathVariable Long itemId,
+            @RequestBody Map<String, Integer> payload) {
         try {
-            carritoService.updateItemQuantity(carritoId, itemId, nuevaCantidad);
+            int nuevaCantidad = payload.get("cantidad");
+            carritoService.updateItemQuantity(carritoId, itemId, nuevaCantidad);  // Verifica que este método exista y funcione
             return ResponseEntity.ok("Cantidad actualizada correctamente");
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error al actualizar la cantidad");
         }
     }
-
 }
+
+
+
+
