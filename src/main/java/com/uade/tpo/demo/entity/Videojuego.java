@@ -12,7 +12,6 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Lob;
 import lombok.Data;
-import java.time.LocalDate;
 import java.util.List;
 import java.util.Set;
 
@@ -41,7 +40,7 @@ public class Videojuego {
     private Set<CategoriaJuego> categorias;
 
     @Column(nullable = false)
-    private LocalDate fechaLanzamiento;
+    private String fechaLanzamiento;
 
     @Column(nullable = false)
     private String desarrolladora;
@@ -49,13 +48,13 @@ public class Videojuego {
     @Column(nullable = false)
     private Integer stock;
 
-    @Lob  // Esto indica que el campo almacenará datos grandes (Large Object)
-    @Column(nullable = true)
-    private byte[] foto;  // Almacenar la imagen principal como binario
+    @Lob
+    @Column(nullable = true, columnDefinition = "LONGBLOB")
+    private byte[] foto;  
 
     @Lob
-    @Column(nullable = true)
-    private byte[] foto2;  // Almacenar la imagen secundaria como binario
+    @Column(nullable = true, columnDefinition = "LONGBLOB")
+    private byte[] foto2;  
 
     @Lob
     @ElementCollection

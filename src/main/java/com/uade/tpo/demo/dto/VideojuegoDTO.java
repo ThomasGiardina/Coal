@@ -2,7 +2,6 @@ package com.uade.tpo.demo.dto;
 
 import com.uade.tpo.demo.entity.Videojuego.CategoriaJuego;
 import lombok.Data;
-import java.time.LocalDate;
 import java.util.List;
 import java.util.Set;
 
@@ -18,6 +17,6 @@ public class VideojuegoDTO {
     private String foto;
     private String foto2;
     private List<String> carrusel;
-    private LocalDate fechaLanzamiento;
+    private String fechaLanzamiento;
     private String desarrolladora;
 }

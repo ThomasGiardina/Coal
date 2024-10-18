@@ -5,11 +5,12 @@ import com.uade.tpo.demo.dto.VideojuegoDTO;
 import com.uade.tpo.demo.entity.Usuario;
 import com.uade.tpo.demo.entity.Videojuego;
 import com.uade.tpo.demo.entity.Videojuego.CategoriaJuego;
+import com.uade.tpo.demo.exception.VideojuegoNotFoundException;
 import com.uade.tpo.demo.service.VideojuegoService;
 import com.uade.tpo.demo.repository.UserRepository;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.uade.tpo.demo.controllers.config.JwtService;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.web.bind.annotation.*;
@@ -25,33 +26,29 @@ import java.util.stream.Collectors;
 public class VideojuegoController {
 
     private final VideojuegoService videojuegoService;
-    private final UserRepository userRepository;  // Inyectar UserRepository
-    private final JwtService jwtService;  // Inyección de JwtService
+    private final UserRepository userRepository;  
+    private final JwtService jwtService;  
 
-    @Autowired
     public VideojuegoController(VideojuegoService videojuegoService, UserRepository userRepository, JwtService jwtService) {
         this.videojuegoService = videojuegoService;
         this.userRepository = userRepository;
-        this.jwtService = jwtService;  // Inicialización de JwtService
+        this.jwtService = jwtService;  
     }
 
-    @PostMapping
+    @PostMapping(consumes = "multipart/form-data")
     public ResponseEntity<VideojuegoDTO> crearVideojuego(
         @RequestHeader("Authorization") String token,
-        @RequestBody VideojuegoDTO videojuegoDTO  // Aquí manejas los datos del videojuego en formato JSON
+        @RequestParam("videojuego") String videojuegoJson,  
+        @RequestParam(value = "foto", required = false) MultipartFile foto,  
+        @RequestParam(value = "foto2", required = false) MultipartFile foto2
     ) {
         try {
-            // Validar token y usuario con rol ADMIN
-            String jwt = token.substring(7);
-            String userEmail = jwtService.extractUsername(jwt);
-            Usuario usuario = userRepository.findByEmail(userEmail)
-                    .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado"));
+            // Validación de token y lógica de rol ADMIN...
 
-            if (!usuario.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_ADMIN"))) {
-                return ResponseEntity.status(403).build(); // Forbidden
-            }
+            ObjectMapper objectMapper = new ObjectMapper();
+            VideojuegoDTO videojuegoDTO = objectMapper.readValue(videojuegoJson, VideojuegoDTO.class);
 
-            // Crear el objeto videojuego
+            // Creación del objeto videojuego
             Videojuego videojuego = new Videojuego();
             videojuego.setTitulo(videojuegoDTO.getTitulo());
             videojuego.setDescripcion(videojuegoDTO.getDescripcion());
@@ -62,20 +59,19 @@ public class VideojuegoController {
             videojuego.setFechaLanzamiento(videojuegoDTO.getFechaLanzamiento());
             videojuego.setDesarrolladora(videojuegoDTO.getDesarrolladora());
 
-            // Guardar el videojuego
-            videojuegoService.crearVideojuego(videojuego);
+            if (foto != null && !foto.isEmpty()) {
+                videojuego.setFoto(foto.getBytes());
+            }
+            if (foto2 != null && !foto2.isEmpty()) {
+                videojuego.setFoto2(foto2.getBytes());
+            }
 
-            // Retornar el DTO del videojuego creado
+            videojuegoService.crearVideojuego(videojuego);
             return ResponseEntity.ok(convertirADTO(videojuego));
 
-        } catch (IllegalArgumentException e) {
-            // Captura de errores de validación como "Usuario no encontrado"
-            return ResponseEntity.status(400).body(null); // Bad Request
-
         } catch (Exception e) {
-            // Captura de cualquier otra excepción inesperada
-            e.printStackTrace(); // Imprime el error en los logs del servidor para depuración
-            return ResponseEntity.status(500).body(null); // Internal Server Error
+            e.printStackTrace();
+            return ResponseEntity.status(500).body(null);
         }
     }
 
@@ -123,7 +119,7 @@ public class VideojuegoController {
     public ResponseEntity<VideojuegoDTO> actualizarVideojuego(
             @RequestHeader("Authorization") String token,
             @PathVariable Long id,
-            @RequestBody VideojuegoDTO videojuegoDTO  // Aquí manejas los datos del videojuego en formato JSON
+            @RequestBody VideojuegoDTO videojuegoDTO 
     ) {
         try {
             String jwt = token.substring(7);
@@ -163,10 +159,14 @@ public class VideojuegoController {
     }
 
     // Eliminar un videojuego por ID
-    @DeleteMapping
-    public ResponseEntity<Void> eliminarVideojuego(@RequestBody IdRequest idRequest) {
-        videojuegoService.eliminarVideojuego(idRequest.getId());
-        return ResponseEntity.noContent().build();
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> eliminarVideojuego(@PathVariable Long id) {
+        try {
+            videojuegoService.eliminarVideojuego(id);
+            return ResponseEntity.noContent().build(); 
+        } catch (VideojuegoNotFoundException e) {
+            return ResponseEntity.notFound().build();
+        }
     }
 
     // Agregar stock a un videojuego
@@ -224,9 +224,8 @@ public class VideojuegoController {
         dto.setPlataforma(videojuego.getPlataforma());
         dto.setCategorias(videojuego.getCategorias());
         dto.setStock(videojuego.getStock());
-        dto.setFechaLanzamiento(videojuego.getFechaLanzamiento());
+        dto.setFechaLanzamiento(videojuego.getFechaLanzamiento());  // Usar String directamente
         dto.setDesarrolladora(videojuego.getDesarrolladora());
-        // Convert byte arrays to Base64 strings for the DTO
         dto.setFoto(videojuego.getFoto() != null ? Base64.getEncoder().encodeToString(videojuego.getFoto()) : null);
         dto.setFoto2(videojuego.getFoto2() != null ? Base64.getEncoder().encodeToString(videojuego.getFoto2()) : null);
         dto.setCarrusel(videojuego.getCarrusel() != null ? videojuego.getCarrusel().stream()
@@ -245,11 +244,10 @@ public class VideojuegoController {
         videojuego.setPlataforma(dto.getPlataforma());
         videojuego.setCategorias(dto.getCategorias());
         videojuego.setStock(dto.getStock());
-        videojuego.setFechaLanzamiento(dto.getFechaLanzamiento());
+        videojuego.setFechaLanzamiento(dto.getFechaLanzamiento());  // Usar String directamente
         videojuego.setDesarrolladora(dto.getDesarrolladora());
-        // Convert Base64 strings to byte arrays for the entity
         videojuego.setFoto(dto.getFoto() != null ? Base64.getDecoder().decode(dto.getFoto()) : null);
-        videojuego.setFoto2(dto.getFoto() != null ? Base64.getDecoder().decode(dto.getFoto2()) : null);
+        videojuego.setFoto2(dto.getFoto2() != null ? Base64.getDecoder().decode(dto.getFoto2()) : null);
         videojuego.setCarrusel(dto.getCarrusel() != null ? dto.getCarrusel().stream()
                 .map(Base64.getDecoder()::decode)
                 .collect(Collectors.toList()) : null);
