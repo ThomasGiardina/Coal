@@ -15,7 +15,7 @@ public class Carrito {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ToString.Exclude  // Excluir la relación bidireccional para evitar recursividad en el toString()
+    @ToString.Exclude  
     @OneToOne
     @JoinColumn(name = "usuario_id", referencedColumnName = "id")
     @JsonBackReference
