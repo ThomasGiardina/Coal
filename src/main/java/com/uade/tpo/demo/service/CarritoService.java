@@ -4,8 +4,10 @@ import com.uade.tpo.demo.dao.CarritoDAO;
 import com.uade.tpo.demo.dao.ItemCarritoDAO;
 import com.uade.tpo.demo.entity.Carrito;
 import com.uade.tpo.demo.entity.ItemCarrito;
+import com.uade.tpo.demo.entity.Usuario;
 import com.uade.tpo.demo.entity.Videojuego;
 import com.uade.tpo.demo.exception.ResourceNotFoundException;
+import com.uade.tpo.demo.repository.UserRepository;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,6 +23,9 @@ public class CarritoService {
 
     @Autowired
     private ItemCarritoDAO itemCarritoDAO;
+
+    @Autowired
+    private UserRepository userRepository;
 
     public Carrito getCarritoById(Long id) {
         return carritoDAO.findById(id).orElse(null);
@@ -78,11 +83,26 @@ public class CarritoService {
 
     public Carrito getCarritoByUsuarioId(Long usuarioId) {
         Optional<Carrito> optionalCarrito = carritoDAO.findByUsuarioId(usuarioId);
+        
         if (!optionalCarrito.isPresent()) {
-            throw new ResourceNotFoundException("Carrito no encontrado para el usuario");
+            logger.info("No se encontró carrito para el usuario con ID: " + usuarioId + ", creando uno nuevo.");
+            Carrito nuevoCarrito = new Carrito();
+            
+            Usuario usuario = userRepository.findById(usuarioId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado"));
+    
+            nuevoCarrito.setUsuario(usuario);
+    
+            Carrito carritoGuardado = carritoDAO.save(nuevoCarrito);  
+    
+            logger.info("Nuevo carrito creado con ID: " + carritoGuardado.getId());
+            return carritoGuardado;  
         }
-        return optionalCarrito.get();
+        
+        return optionalCarrito.get(); 
     }
+    
+
 
     public void updateItemQuantity(Long carritoId, Long itemId, int nuevaCantidad) {
         Carrito carrito = carritoDAO.findById(carritoId)

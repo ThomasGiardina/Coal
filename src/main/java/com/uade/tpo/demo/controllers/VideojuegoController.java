@@ -168,9 +168,6 @@ public class VideojuegoController {
     }
 
 
-
-
-
     // Eliminar un videojuego por ID
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> eliminarVideojuego(@PathVariable Long id) {

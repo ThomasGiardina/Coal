@@ -7,6 +7,7 @@ import com.uade.tpo.demo.entity.Pedido;
 import com.uade.tpo.demo.entity.Usuario;
 import com.uade.tpo.demo.entity.Videojuego;
 import com.uade.tpo.demo.exception.InsufficientStockException;
+import com.uade.tpo.demo.exception.ResourceNotFoundException;
 import com.uade.tpo.demo.service.CarritoService;
 import com.uade.tpo.demo.service.PedidoService;
 import com.uade.tpo.demo.service.VideojuegoService;
@@ -134,29 +135,18 @@ public class CarritoController {
 
             if (carrito == null) {
                 logger.info("No se encontró el carrito para el usuario con ID: " + usuario.getId());
-                return ResponseEntity.notFound().build();
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Carrito no encontrado para este usuario.");
             }
 
-            List<ItemCarritoDTO> itemsDTO = carrito.getItems().stream().map(item -> {
-                ItemCarritoDTO dto = new ItemCarritoDTO();
-                dto.setId(item.getId());  
-                dto.setCarritoId(carrito.getId());  
-                dto.setTitulo(item.getTitulo());
-                dto.setCantidad(item.getCantidad());
-                dto.setPrecio(item.getPrecio());
-                dto.setVideojuegoId(item.getVideojuego().getId());  
-                dto.setPlataforma(item.getPlataforma());
-                return dto;
-            }).collect(Collectors.toList());
+            logger.info("Carrito obtenido con ID: " + carrito.getId());
 
+            return ResponseEntity.ok(carrito);
 
-            return ResponseEntity.ok(itemsDTO);
         } catch (Exception e) {
             logger.error("Error obteniendo el carrito para el usuario", e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error al obtener el carrito para el usuario.");
         }
     }
-
 
 
     @PutMapping("/{carritoId}/items/{itemId}")
