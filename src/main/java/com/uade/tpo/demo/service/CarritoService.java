@@ -104,17 +104,13 @@ public class CarritoService {
     
 
 
-    public void updateItemQuantity(Long carritoId, Long itemId, int nuevaCantidad) {
-        Carrito carrito = carritoDAO.findById(carritoId)
-                .orElseThrow(() -> new ResourceNotFoundException("Carrito no encontrado"));
-
-        ItemCarrito item = carrito.getItems().stream()
-                .filter(i -> i.getId().equals(itemId))
-                .findFirst()
+    public void updateItemQuantityByItemId(Long itemId, int nuevaCantidad) {
+        // Buscar el ítem directamente por su itemId
+        ItemCarrito item = itemCarritoDAO.findById(itemId)
                 .orElseThrow(() -> new ResourceNotFoundException("Item no encontrado"));
 
         item.setCantidad(nuevaCantidad);
-        itemCarritoDAO.save(item);
+        itemCarritoDAO.save(item);  // Guardar los cambios
     }
     
     

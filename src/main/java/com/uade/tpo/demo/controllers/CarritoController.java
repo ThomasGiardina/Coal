@@ -149,14 +149,13 @@ public class CarritoController {
     }
 
 
-    @PutMapping("/{carritoId}/items/{itemId}")
+    @PutMapping("/items/{itemId}")
     public ResponseEntity<?> updateItemQuantity(
-            @PathVariable Long carritoId,
             @PathVariable Long itemId,
             @RequestBody Map<String, Integer> payload) {
         try {
             int nuevaCantidad = payload.get("cantidad");
-            carritoService.updateItemQuantity(carritoId, itemId, nuevaCantidad);  
+            carritoService.updateItemQuantityByItemId(itemId, nuevaCantidad);  
             return ResponseEntity.ok("Cantidad actualizada correctamente");
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error al actualizar la cantidad");
