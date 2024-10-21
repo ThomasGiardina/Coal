@@ -22,6 +22,5 @@ public interface VideojuegoService {
     List<Videojuego> buscarPorDescripcion(String keyword);
     List<Videojuego> buscarPorCategoria(CategoriaJuego categoria);
     Videojuego subirFoto(Long videojuegoId, MultipartFile foto) throws IOException, VideojuegoNotFoundException;
-    Videojuego subirFoto2(Long videojuegoId, MultipartFile foto2) throws IOException, VideojuegoNotFoundException;
-    Videojuego subirCarrusel(Long videojuegoId, List<MultipartFile> carrusel) throws IOException, VideojuegoNotFoundException;
+    Videojuego subirCarruselImagen(Long videojuegoId, MultipartFile imagen, int index) throws IOException, VideojuegoNotFoundException;
 }

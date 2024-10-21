@@ -11,12 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -83,7 +78,7 @@ public class VideojuegoServiceImpl implements VideojuegoService {
         }
         videojuego.setStock(videojuego.getStock() - cantidad);
         return videojuegoRepository.save(videojuego);
-    }    
+    }
 
     @Override
     public List<Videojuego> buscarPorTitulo(String titulo) {
@@ -117,32 +112,23 @@ public class VideojuegoServiceImpl implements VideojuegoService {
     }
 
     @Override
-    public Videojuego subirFoto2(Long videojuegoId, MultipartFile foto2) throws IOException, VideojuegoNotFoundException {
+    public Videojuego subirCarruselImagen(Long videojuegoId, MultipartFile imagen, int index) throws IOException, VideojuegoNotFoundException {
         Videojuego videojuego = obtenerVideojuegoPorId(videojuegoId);
-        videojuego.setFoto2(foto2.getBytes()); 
-        return videojuegoRepository.save(videojuego);
-    }
 
-    @Override
-    public Videojuego subirCarrusel(Long videojuegoId, List<MultipartFile> carrusel) throws IOException, VideojuegoNotFoundException {
-        Videojuego videojuego = obtenerVideojuegoPorId(videojuegoId);
-        List<byte[]> carruselBytes = new ArrayList<>();
-        for (MultipartFile file : carrusel) {
-            carruselBytes.add(file.getBytes());
+        switch (index) {
+            case 1:
+                videojuego.setCarruselImagen1(imagen.getBytes());
+                break;
+            case 2:
+                videojuego.setCarruselImagen2(imagen.getBytes());
+                break;
+            case 3:
+                videojuego.setCarruselImagen3(imagen.getBytes());
+                break;
+            default:
+                throw new IllegalArgumentException("Índice de imagen del carrusel inválido: " + index);
         }
-        videojuego.setCarrusel(carruselBytes);
+
         return videojuegoRepository.save(videojuego);
     }
-
-    private String guardarFoto(MultipartFile foto) throws IOException {
-    String folder = "fotos/";
-    File directory = new File(folder);
-    if (!directory.exists()) {
-        directory.mkdirs(); 
-    }
-    byte[] bytes = foto.getBytes();
-    Path path = Paths.get(folder + foto.getOriginalFilename());
-    Files.write(path, bytes);
-    return path.toString();
-}
 }

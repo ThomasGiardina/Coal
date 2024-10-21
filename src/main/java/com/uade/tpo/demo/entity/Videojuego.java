@@ -54,11 +54,15 @@ public class Videojuego {
 
     @Lob
     @Column(nullable = true, columnDefinition = "LONGBLOB")
-    private byte[] foto2;  
+    private byte[] carruselImagen1;
 
     @Lob
-    @ElementCollection
-    private List<byte[]> carrusel;
+    @Column(nullable = true, columnDefinition = "LONGBLOB")
+    private byte[] carruselImagen2;
+
+    @Lob
+    @Column(nullable = true, columnDefinition = "LONGBLOB")
+    private byte[] carruselImagen3;
 
     @Column(nullable = false)
     private int ventas;

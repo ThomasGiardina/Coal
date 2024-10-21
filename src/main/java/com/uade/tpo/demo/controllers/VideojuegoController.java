@@ -40,14 +40,14 @@ public class VideojuegoController {
         @RequestHeader("Authorization") String token,
         @RequestParam("videojuego") String videojuegoJson,  
         @RequestParam(value = "foto", required = false) MultipartFile foto,  
-        @RequestParam(value = "foto2", required = false) MultipartFile foto2
+        @RequestParam(value = "carruselImagen1", required = false) MultipartFile carruselImagen1,
+        @RequestParam(value = "carruselImagen2", required = false) MultipartFile carruselImagen2,
+        @RequestParam(value = "carruselImagen3", required = false) MultipartFile carruselImagen3
     ) {
         try {
-
             ObjectMapper objectMapper = new ObjectMapper();
             VideojuegoDTO videojuegoDTO = objectMapper.readValue(videojuegoJson, VideojuegoDTO.class);
 
-            // Creación del objeto videojuego
             Videojuego videojuego = new Videojuego();
             videojuego.setTitulo(videojuegoDTO.getTitulo());
             videojuego.setDescripcion(videojuegoDTO.getDescripcion());
@@ -61,8 +61,14 @@ public class VideojuegoController {
             if (foto != null && !foto.isEmpty()) {
                 videojuego.setFoto(foto.getBytes());
             }
-            if (foto2 != null && !foto2.isEmpty()) {
-                videojuego.setFoto2(foto2.getBytes());
+            if (carruselImagen1 != null && !carruselImagen1.isEmpty()) {
+                videojuego.setCarruselImagen1(carruselImagen1.getBytes());
+            }
+            if (carruselImagen2 != null && !carruselImagen2.isEmpty()) {
+                videojuego.setCarruselImagen2(carruselImagen2.getBytes());
+            }
+            if (carruselImagen3 != null && !carruselImagen3.isEmpty()) {
+                videojuego.setCarruselImagen3(carruselImagen3.getBytes());
             }
 
             videojuegoService.crearVideojuego(videojuego);
@@ -74,25 +80,10 @@ public class VideojuegoController {
         }
     }
 
-
-    // Endpoint para subir la imagen principal
+    // Endpoint para subir la imagen principal en el caso de que falle el form data
     @PostMapping("/{id}/foto")
     public ResponseEntity<VideojuegoDTO> subirFoto(@PathVariable Long id, @RequestParam("foto") MultipartFile foto) throws IOException {
         Videojuego videojuego = videojuegoService.subirFoto(id, foto);
-        return ResponseEntity.ok(convertirADTO(videojuego));
-    }
-
-    // Endpoint para subir la segunda imagen
-    @PostMapping("/{id}/foto2")
-    public ResponseEntity<VideojuegoDTO> subirFoto2(@PathVariable Long id, @RequestParam("foto2") MultipartFile foto2) throws IOException {
-        Videojuego videojuego = videojuegoService.subirFoto2(id, foto2);
-        return ResponseEntity.ok(convertirADTO(videojuego));
-    }
-
-    // Endpoint para subir las imágenes del carrusel
-    @PostMapping("/{id}/carrusel")
-    public ResponseEntity<VideojuegoDTO> subirCarrusel(@PathVariable Long id, @RequestParam("carrusel") List<MultipartFile> carrusel) throws IOException {
-        Videojuego videojuego = videojuegoService.subirCarrusel(id, carrusel);
         return ResponseEntity.ok(convertirADTO(videojuego));
     }
 
@@ -120,7 +111,9 @@ public class VideojuegoController {
             @PathVariable Long id,
             @RequestParam("videojuego") String videojuegoJson, 
             @RequestParam(value = "foto", required = false) MultipartFile foto,  
-            @RequestParam(value = "foto2", required = false) MultipartFile foto2 
+            @RequestParam(value = "carruselImagen1", required = false) MultipartFile carruselImagen1,
+            @RequestParam(value = "carruselImagen2", required = false) MultipartFile carruselImagen2,
+            @RequestParam(value = "carruselImagen3", required = false) MultipartFile carruselImagen3
     ) {
         try {
             String jwt = token.substring(7);
@@ -149,9 +142,14 @@ public class VideojuegoController {
             if (foto != null && !foto.isEmpty()) {
                 videojuegoExistente.setFoto(foto.getBytes());
             }
-
-            if (foto2 != null && !foto2.isEmpty()) {
-                videojuegoExistente.setFoto2(foto2.getBytes());
+            if (carruselImagen1 != null && !carruselImagen1.isEmpty()) {
+                videojuegoExistente.setCarruselImagen1(carruselImagen1.getBytes());
+            }
+            if (carruselImagen2 != null && !carruselImagen2.isEmpty()) {
+                videojuegoExistente.setCarruselImagen2(carruselImagen2.getBytes());
+            }
+            if (carruselImagen3 != null && !carruselImagen3.isEmpty()) {
+                videojuegoExistente.setCarruselImagen3(carruselImagen3.getBytes());
             }
 
             Videojuego videojuegoActualizado = videojuegoService.actualizarVideojuego(id, videojuegoExistente);
@@ -166,6 +164,8 @@ public class VideojuegoController {
             return ResponseEntity.status(500).body(null); 
         }
     }
+
+
 
 
     // Eliminar un videojuego por ID
@@ -234,15 +234,17 @@ public class VideojuegoController {
         dto.setPlataforma(videojuego.getPlataforma());
         dto.setCategorias(videojuego.getCategorias());
         dto.setStock(videojuego.getStock());
-        dto.setFechaLanzamiento(videojuego.getFechaLanzamiento());  // Usar String directamente
+        dto.setFechaLanzamiento(videojuego.getFechaLanzamiento());  
         dto.setDesarrolladora(videojuego.getDesarrolladora());
         dto.setFoto(videojuego.getFoto() != null ? Base64.getEncoder().encodeToString(videojuego.getFoto()) : null);
-        dto.setFoto2(videojuego.getFoto2() != null ? Base64.getEncoder().encodeToString(videojuego.getFoto2()) : null);
-        dto.setCarrusel(videojuego.getCarrusel() != null ? videojuego.getCarrusel().stream()
-                .map(bytes -> Base64.getEncoder().encodeToString(bytes))
-                .collect(Collectors.toList()) : null);
+    
+        // Agregar imágenes del carrusel
+        dto.setCarruselImagen1(videojuego.getCarruselImagen1() != null ? Base64.getEncoder().encodeToString(videojuego.getCarruselImagen1()) : null);
+        dto.setCarruselImagen2(videojuego.getCarruselImagen2() != null ? Base64.getEncoder().encodeToString(videojuego.getCarruselImagen2()) : null);
+        dto.setCarruselImagen3(videojuego.getCarruselImagen3() != null ? Base64.getEncoder().encodeToString(videojuego.getCarruselImagen3()) : null);
+    
         return dto;
-    }
+    }    
 
     // Convertir de DTO a entidad
     private Videojuego convertirAEntidad(VideojuegoDTO dto) {
@@ -254,14 +256,16 @@ public class VideojuegoController {
         videojuego.setPlataforma(dto.getPlataforma());
         videojuego.setCategorias(dto.getCategorias());
         videojuego.setStock(dto.getStock());
-        videojuego.setFechaLanzamiento(dto.getFechaLanzamiento());  // Usar String directamente
+        videojuego.setFechaLanzamiento(dto.getFechaLanzamiento());  
         videojuego.setDesarrolladora(dto.getDesarrolladora());
         videojuego.setFoto(dto.getFoto() != null ? Base64.getDecoder().decode(dto.getFoto()) : null);
-        videojuego.setFoto2(dto.getFoto2() != null ? Base64.getDecoder().decode(dto.getFoto2()) : null);
-        videojuego.setCarrusel(dto.getCarrusel() != null ? dto.getCarrusel().stream()
-                .map(Base64.getDecoder()::decode)
-                .collect(Collectors.toList()) : null);
+    
+        // Agregar imágenes del carrusel
+        videojuego.setCarruselImagen1(dto.getCarruselImagen1() != null ? Base64.getDecoder().decode(dto.getCarruselImagen1()) : null);
+        videojuego.setCarruselImagen2(dto.getCarruselImagen2() != null ? Base64.getDecoder().decode(dto.getCarruselImagen2()) : null);
+        videojuego.setCarruselImagen3(dto.getCarruselImagen3() != null ? Base64.getDecoder().decode(dto.getCarruselImagen3()) : null);
+    
         return videojuego;
-    }
+    }    
 
 }

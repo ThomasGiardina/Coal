@@ -2,7 +2,6 @@ package com.uade.tpo.demo.dto;
 
 import com.uade.tpo.demo.entity.Videojuego.CategoriaJuego;
 import lombok.Data;
-import java.util.List;
 import java.util.Set;
 
 @Data
@@ -15,8 +14,9 @@ public class VideojuegoDTO {
     private Set<CategoriaJuego> categorias;
     private Integer stock;
     private String foto;
-    private String foto2;
-    private List<String> carrusel;
+    private String carruselImagen1; 
+    private String carruselImagen2; 
+    private String carruselImagen3; 
     private String fechaLanzamiento;
     private String desarrolladora;
 }
