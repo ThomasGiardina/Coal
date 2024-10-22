@@ -3,6 +3,7 @@ package com.uade.tpo.demo.controllers;
 import com.uade.tpo.demo.controllers.config.JwtService;
 import com.uade.tpo.demo.dto.ItemCarritoDTO;
 import com.uade.tpo.demo.entity.Carrito;
+import com.uade.tpo.demo.entity.ItemCarrito;
 import com.uade.tpo.demo.entity.Pedido;
 import com.uade.tpo.demo.entity.Usuario;
 import com.uade.tpo.demo.entity.Videojuego;
@@ -72,6 +73,22 @@ public class CarritoController {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Videojuego no encontrado");
             }
 
+            // Verificar si el videojuego ya está en el carrito
+            List<ItemCarrito> itemsEnCarrito = carrito.getItems();
+            ItemCarrito itemExistente = itemsEnCarrito.stream()
+                    .filter(item -> item.getVideojuego().getId().equals(videojuego.getId()))
+                    .findFirst()
+                    .orElse(null);
+
+            int cantidadActual = itemExistente != null ? itemExistente.getCantidad() : 0;
+            int nuevaCantidad = cantidadActual + itemCarritoDTO.getCantidad();
+
+            // Comprobar si la nueva cantidad excede el stock
+            if (nuevaCantidad > videojuego.getStock()) {
+                return ResponseEntity.status(HttpStatus.CONFLICT).body("No se puede agregar más de " + videojuego.getStock() + " unidades. Stock disponible: " + videojuego.getStock());
+            }
+
+            // Agregar el item al carrito
             carritoService.addItemToCarrito(carrito.getId(), videojuego, itemCarritoDTO.getCantidad());
 
             return ResponseEntity.ok(Collections.singletonMap("message", "Item agregado al carrito"));
@@ -81,6 +98,7 @@ public class CarritoController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Collections.singletonMap("error", "Error al agregar el item al carrito"));
         }
     }
+
 
     
     @DeleteMapping("/items/{itemId}")
