@@ -1,6 +1,9 @@
 package com.uade.tpo.demo.service;
 
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.io.IOException;
 
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -44,8 +47,14 @@ public class AuthenticationService {
                         throw new RuntimeException("username_already_exists");
                 }
                 
-                String imagenPerfil = "defaultUser.jpg";
-                byte[] defaultImageBytes = imagenPerfil.getBytes(StandardCharsets.UTF_8);
+                String imagenPerfilPath = "uploads/defaultUser.jpg"; 
+                
+                byte[] defaultImageBytes;
+                try {
+                        defaultImageBytes = Files.readAllBytes(Paths.get(imagenPerfilPath));
+                } catch (IOException e) {
+                        throw new RuntimeException("No se pudo cargar la imagen predeterminada", e);
+                }
                 
                 var user = Usuario.builder()
                         .username(request.getUsername())
