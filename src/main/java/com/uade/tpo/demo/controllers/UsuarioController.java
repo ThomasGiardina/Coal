@@ -48,23 +48,27 @@ public class UsuarioController {
     }
 
     @GetMapping("/actual")
-    public ResponseEntity<UsuarioDTO> obtenerUsuarioActual() {
-        try {
-            Usuario usuarioActual = usuarioService.obtenerUsuarioActual();
-            
-            UsuarioDTO usuarioDTO = new UsuarioDTO(
-                usuarioActual.getId(),
-                usuarioActual.getRealUsername(),  
-                usuarioActual.getEmail(),
-                usuarioActual.getFirstName(),
-                usuarioActual.getLastName(),
-                usuarioActual.getTelefono()
-            );
-            return ResponseEntity.ok(usuarioDTO);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
-        }
+public ResponseEntity<UsuarioDTO> obtenerUsuarioActual() {
+    try {
+        Usuario usuarioActual = usuarioService.obtenerUsuarioActual();
+        
+        UsuarioDTO usuarioDTO = new UsuarioDTO(
+            usuarioActual.getId(),
+            usuarioActual.getRealUsername(),  
+            usuarioActual.getEmail(),
+            usuarioActual.getFirstName(),
+            usuarioActual.getLastName(),
+            usuarioActual.getTelefono()
+        );
+        return ResponseEntity.ok(usuarioDTO);
+    } catch (Exception e) {
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
     }
+}
+
+    @Value("${upload.dir}") 
+    private String uploadDir;
+
     @PostMapping("/actualizar-imagen")
     public ResponseEntity<String> actualizarImagenPerfil(@RequestParam("imagen") MultipartFile file) {
         try {
