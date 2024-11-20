@@ -1,5 +1,7 @@
 package com.uade.tpo.demo.service;
 
+import java.nio.charset.StandardCharsets;
+
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -43,6 +45,7 @@ public class AuthenticationService {
                 }
                 
                 String imagenPerfil = "defaultUser.jpg";
+                byte[] defaultImageBytes = imagenPerfil.getBytes(StandardCharsets.UTF_8);
                 
                 var user = Usuario.builder()
                         .username(request.getUsername())
@@ -50,7 +53,7 @@ public class AuthenticationService {
                         .lastName(request.getLastname())
                         .email(request.getEmail())
                         .password(passwordEncoder.encode(request.getPassword()))
-                        .imagenPerfil(imagenPerfil)
+                        .imagenPerfil(defaultImageBytes)
                         .role(Rol.USER) 
                         .build();
                 

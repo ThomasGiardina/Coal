@@ -100,15 +100,11 @@ public class UsuarioService {
     private String uploadDir;
 
     public Usuario actualizarImagenUsuario(MultipartFile imagen) throws IOException {
-
         Usuario usuario = obtenerUsuarioActual();
-
-        String fileName = imagen.getOriginalFilename();
-        Path filePath = Paths.get(uploadDir, fileName);
-        Files.copy(imagen.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
-
-        usuario.setImagenPerfil(fileName);  
-        return usuarioRepository.save(usuario); 
+    
+        usuario.setImagenPerfil(imagen.getBytes());
+    
+        return usuarioRepository.save(usuario);
     }
 
     public void cambiarContrasena(String contraseñaActual, String nuevaContraseña) {
@@ -120,6 +116,11 @@ public class UsuarioService {
 
         usuario.setPassword(passwordEncoder.encode(nuevaContraseña));
         usuarioRepository.save(usuario);
+    }
+
+    public Usuario obtenerUsuarioPorId(Long id) {
+        return usuarioRepository.findById(id)
+                .orElseThrow(() -> new UserNotFoundException("Usuario no encontrado con ID: " + id));
     }
 
 }

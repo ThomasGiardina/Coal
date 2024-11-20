@@ -5,11 +5,13 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.util.concurrent.TimeUnit;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
+import org.springframework.http.CacheControl;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -46,60 +48,57 @@ public class UsuarioController {
     }
 
     @GetMapping("/actual")
-public ResponseEntity<UsuarioDTO> obtenerUsuarioActual() {
-    try {
-        Usuario usuarioActual = usuarioService.obtenerUsuarioActual();
-        
-        UsuarioDTO usuarioDTO = new UsuarioDTO(
-            usuarioActual.getId(),
-            usuarioActual.getRealUsername(),  
-            usuarioActual.getEmail(),
-            usuarioActual.getFirstName(),
-            usuarioActual.getLastName(),
-            usuarioActual.getTelefono()
-        );
-        return ResponseEntity.ok(usuarioDTO);
-    } catch (Exception e) {
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+    public ResponseEntity<UsuarioDTO> obtenerUsuarioActual() {
+        try {
+            Usuario usuarioActual = usuarioService.obtenerUsuarioActual();
+            
+            UsuarioDTO usuarioDTO = new UsuarioDTO(
+                usuarioActual.getId(),
+                usuarioActual.getRealUsername(),  
+                usuarioActual.getEmail(),
+                usuarioActual.getFirstName(),
+                usuarioActual.getLastName(),
+                usuarioActual.getTelefono()
+            );
+            return ResponseEntity.ok(usuarioDTO);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+        }
     }
-}
-
-    @Value("${upload.dir}") 
-    private String uploadDir;
-
     @PostMapping("/actualizar-imagen")
     public ResponseEntity<String> actualizarImagenPerfil(@RequestParam("imagen") MultipartFile file) {
         try {
+            long maxFileSize = 100 * 1024 * 1024; 
+            if (file.getSize() > maxFileSize) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("El archivo excede el tamaño máximo permitido.");
+            }
+
             Usuario usuarioActual = usuarioService.obtenerUsuarioActual();
-
-            String fileName = file.getOriginalFilename();
-            Path filePath = Paths.get(uploadDir, fileName);
-            Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
-
-            usuarioActual.setImagenPerfil(fileName); 
+            usuarioActual.setImagenPerfil(file.getBytes());
             usuarioService.actualizarUsuario(usuarioActual);
 
-            return ResponseEntity.ok(fileName); 
+            return ResponseEntity.ok("Imagen actualizada correctamente.");
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error al actualizar la imagen.");
         }
     }
 
-    @GetMapping("/imagen/{nombreImagen}")
-    public ResponseEntity<Resource> obtenerImagen(@PathVariable String nombreImagen) {
+    @GetMapping("/imagen/{userId}")
+    public ResponseEntity<byte[]> obtenerImagen(@PathVariable Long userId) {
         try {
-            Path filePath = Paths.get(uploadDir, nombreImagen);
-            Resource resource = new UrlResource(filePath.toUri());
+            Usuario usuario = usuarioService.obtenerUsuarioPorId(userId);
 
-            if (resource.exists() || resource.isReadable()) {
-                return ResponseEntity.ok()
-                        .contentType(MediaType.IMAGE_JPEG) 
-                        .body(resource);
-            } else {
-                throw new RuntimeException("No se pudo leer la imagen.");
+            if (usuario.getImagenPerfil() == null) {
+                throw new RuntimeException("Imagen no encontrada para el usuario.");
             }
+
+            byte[] imagenPerfil = usuario.getImagenPerfil();
+            return ResponseEntity.ok()
+                    .contentType(MediaType.IMAGE_JPEG) 
+                    .body(imagenPerfil);
         } catch (Exception e) {
+            e.printStackTrace();
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
         }
     }

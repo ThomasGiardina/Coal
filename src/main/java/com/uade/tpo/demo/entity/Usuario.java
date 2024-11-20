@@ -78,18 +78,9 @@ public class Usuario implements UserDetails, Serializable {
     @JsonManagedReference
     private List<MetodoPago> metodosPago;
 
-
-    @Column(name = "imagen_perfil", nullable = true)
-    private String imagenPerfil; 
-
-    // Getters y setters
-    public String getImagenPerfil() {
-        return imagenPerfil;
-    }
-
-    public void setImagenPerfil(String imagenPerfil) {
-        this.imagenPerfil = imagenPerfil;
-    }
+    @Lob
+    @Column(name = "imagen_perfil", columnDefinition = "LONGBLOB", nullable = true)
+    private byte[] imagenPerfil;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
