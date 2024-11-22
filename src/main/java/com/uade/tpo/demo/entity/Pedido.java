@@ -47,7 +47,7 @@ public class Pedido {
     private EstadoPedido estadoPedido; // Estado del pedido (PENDIENTE, CONFIRMADO, CANCELADO)
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(nullable = false, length = 255) 
     private TipoEntrega tipoEntrega; // Tipo de entrega (Delivery o RetiroLocal)
 
     @Column(name = "direccion_envio")
@@ -68,7 +68,7 @@ public class Pedido {
     }
 
     public enum TipoEntrega {
-        DELIVERY,
-        RETIRO_LOCAL
+        ENVIO,
+        DELIVERY
     }
 }

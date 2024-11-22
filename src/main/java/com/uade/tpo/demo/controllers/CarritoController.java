@@ -1,5 +1,6 @@
 package com.uade.tpo.demo.controllers;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.uade.tpo.demo.controllers.config.JwtService;
 import com.uade.tpo.demo.dto.ItemCarritoDTO;
 import com.uade.tpo.demo.entity.Carrito;
@@ -118,22 +119,55 @@ public class CarritoController {
         @PathVariable Long carritoId,
         @RequestBody Map<String, Object> request
     ) {
-        Carrito carrito = carritoService.getCarritoById(carritoId);
-        if (carrito == null) {
-            return ResponseEntity.notFound().build();
+        try {
+            logger.info("Recibiendo solicitud para confirmar carrito con ID: {}", carritoId);
+            logger.info("Datos del request: {}", request);
+
+            Carrito carrito = carritoService.getCarritoById(carritoId);
+            if (carrito == null) {
+                logger.error("Carrito no encontrado con ID: {}", carritoId);
+                return ResponseEntity.notFound().build();
+            }
+
+            logger.info("Carrito encontrado: {}", carrito);
+
+            Usuario usuario = carrito.getUsuario();
+            String tipoEntrega = (String) request.get("tipoEntrega");
+            Long metodoPagoId = request.get("metodoPagoId") != null 
+                                ? Long.valueOf(request.get("metodoPagoId").toString()) 
+                                : null;
+
+            logger.info("Método de pago ID recibido: {}", metodoPagoId);
+            logger.info("Tipo de entrega recibido: {}", tipoEntrega);
+
+            String direccionEnvioJson = (String) request.get("direccionEnvio");
+            Map<String, String> direccionEnvio = direccionEnvioJson != null
+                    ? new ObjectMapper().readValue(direccionEnvioJson, Map.class)
+                    : null;
+
+            logger.info("Dirección de envío procesada: {}", direccionEnvio);
+
+            MetodoPago metodoPago = metodoPagoId != null 
+                                    ? metodoPagoService.obtenerMetodoPagoPorId(metodoPagoId) 
+                                    : null;
+
+            if (metodoPago == null && !"EFECTIVO".equalsIgnoreCase(tipoEntrega)) {
+                logger.error("Método de pago no encontrado o inválido.");
+                return ResponseEntity.badRequest().build();
+            }
+
+            Pedido pedido = pedidoService.crearPedido(carrito, usuario, tipoEntrega, metodoPago, direccionEnvio);
+
+            logger.info("Pedido creado exitosamente: {}", pedido);
+
+            return ResponseEntity.ok(pedido);
+        } catch (Exception e) {
+            logger.error("Error al confirmar carrito: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
         }
-
-        Usuario usuario = carrito.getUsuario();
-        String tipoEntrega = (String) request.get("tipoEntrega");
-        Long metodoPagoId = request.get("metodoPagoId") != null ? Long.valueOf(request.get("metodoPagoId").toString()) : null;
-        Map<String, String> direccionEnvio = (Map<String, String>) request.get("direccionEnvio");
-
-        MetodoPago metodoPago = metodoPagoId != null ? metodoPagoService.obtenerMetodoPagoPorId(metodoPagoId) : null;
-
-        Pedido pedido = pedidoService.crearPedido(carrito, usuario, tipoEntrega, metodoPago, direccionEnvio);
-
-        return ResponseEntity.ok(pedido);
     }
+
+
 
 
 

@@ -19,12 +19,16 @@ import com.uade.tpo.demo.entity.Pedido.EstadoPedido;
 import com.uade.tpo.demo.repository.PedidoRepository;
 import com.uade.tpo.demo.repository.MetodoPagoRepository;
 import com.uade.tpo.demo.repository.VideojuegoRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 import jakarta.transaction.Transactional;
 
 @Service
 public class PedidoService {
+
+    private static final Logger logger = LoggerFactory.getLogger(PedidoService.class);
 
     @Autowired
     private PedidoRepository pedidoRepository;
@@ -46,53 +50,78 @@ public class PedidoService {
 
     @Transactional
     public Pedido crearPedido(Carrito carrito, Usuario usuario, String tipoEntrega, MetodoPago metodoPago, Map<String, String> direccionEnvio) {
-        if (carrito == null || usuario == null || tipoEntrega == null) {
-            throw new IllegalArgumentException("Datos insuficientes para crear el pedido.");
-        }
+        try {
+            logger.info("Iniciando la creación del pedido. Carrito ID: {}, Usuario: {}, TipoEntrega: {}, MetodoPago: {}",
+                    carrito != null ? carrito.getId() : "NULO",
+                    usuario != null ? usuario.getId() : "NULO",
+                    tipoEntrega,
+                    metodoPago);
 
-        Pedido pedido = new Pedido();
-        pedido.setComprador(usuario);
-        pedido.setNombreComprador(usuario.getFirstName() + " " + usuario.getLastName());
-        pedido.setUsuarioComprador(usuario.getUsername());
-        pedido.setMetodoPago(metodoPago);
-        pedido.setTipoEntrega(Pedido.TipoEntrega.valueOf(tipoEntrega.toUpperCase()));
-        pedido.setFecha(LocalDateTime.now());
-        pedido.setEstadoPedido(Pedido.EstadoPedido.PENDIENTE);
-
-        if ("DELIVERY".equalsIgnoreCase(tipoEntrega)) {
-            if (direccionEnvio == null || direccionEnvio.isEmpty()) {
-                throw new IllegalArgumentException("La dirección de envío es requerida para el tipo de entrega DELIVERY.");
-            }
-            String direccion = direccionEnvio.get("direccion");
-            String ciudad = direccionEnvio.get("localidad");
-            String codigoPostal = direccionEnvio.get("codigoPostal");
-            String telefono = direccionEnvio.get("telefono");
-
-            if (direccion == null || ciudad == null || codigoPostal == null || telefono == null) {
-                throw new IllegalArgumentException("La dirección de envío está incompleta.");
+            if (carrito == null || usuario == null || tipoEntrega == null) {
+                throw new IllegalArgumentException("Datos insuficientes para crear el pedido.");
             }
 
-            pedido.setDireccionEnvio(String.format("%s, %s, %s, Tel: %s", direccion, ciudad, codigoPostal, telefono));
+            Pedido pedido = new Pedido();
+            pedido.setComprador(usuario);
+            pedido.setNombreComprador(usuario.getFirstName() + " " + usuario.getLastName());
+            pedido.setUsuarioComprador(usuario.getUsername());
+            pedido.setMetodoPago(metodoPago);
+            pedido.setTipoPago(metodoPago.getTipoPago());
+            pedido.setTipoEntrega(Pedido.TipoEntrega.valueOf(tipoEntrega.toUpperCase()));
+            pedido.setFecha(LocalDateTime.now());
+            pedido.setEstadoPedido(Pedido.EstadoPedido.PENDIENTE);
+
+            logger.info("Datos iniciales del pedido asignados: {}", pedido);
+
+            if ("DELIVERY".equalsIgnoreCase(tipoEntrega)) {
+                if (direccionEnvio == null || direccionEnvio.isEmpty()) {
+                    throw new IllegalArgumentException("La dirección de envío es requerida para el tipo de entrega DELIVERY.");
+                }
+
+                String direccion = direccionEnvio.get("direccion");
+                String ciudad = direccionEnvio.get("localidad");
+                String codigoPostal = direccionEnvio.get("codigoPostal");
+                String telefono = direccionEnvio.get("telefono");
+
+                if (direccion == null || ciudad == null || codigoPostal == null || telefono == null) {
+                    throw new IllegalArgumentException("La dirección de envío está incompleta.");
+                }
+
+                pedido.setDireccionEnvio(String.format("%s, %s, %s, Tel: %s", direccion, ciudad, codigoPostal, telefono));
+            }
+
+            logger.info("Dirección de envío asignada: {}", pedido.getDireccionEnvio());
+
+            List<ItemPedido> items = carrito.getItems().stream().map(itemCarrito -> {
+                ItemPedido itemPedido = new ItemPedido();
+                itemPedido.setVideojuego(itemCarrito.getVideojuego());
+                itemPedido.setCantidad(itemCarrito.getCantidad());
+                itemPedido.setPrecio(itemCarrito.getPrecio());
+                return itemPedido;
+            }).collect(Collectors.toList());
+
+            pedido.setProductosAdquiridos(items);
+            pedido.setMontoTotal(items.stream().mapToDouble(item -> item.getPrecio() * item.getCantidad()).sum());
+            pedido.setCantidadArticulos(items.size());
+
+            logger.info("Monto total calculado: {}, Cantidad de artículos: {}", pedido.getMontoTotal(), pedido.getCantidadArticulos());
+
+            Pedido nuevoPedido = pedidoRepository.save(pedido);
+
+            logger.info("Pedido guardado en la base de datos. ID: {}", nuevoPedido.getId());
+
+            carritoService.vaciarCarrito(carrito);
+
+            logger.info("Carrito ID: {} vaciado exitosamente.", carrito.getId());
+
+            return nuevoPedido;
+        } catch (Exception e) {
+            logger.error("Error al crear el pedido: {}", e.getMessage(), e);
+            throw e;
         }
-
-        List<ItemPedido> items = carrito.getItems().stream().map(itemCarrito -> {
-            ItemPedido itemPedido = new ItemPedido();
-            itemPedido.setVideojuego(itemCarrito.getVideojuego());
-            itemPedido.setCantidad(itemCarrito.getCantidad());
-            itemPedido.setPrecio(itemCarrito.getPrecio());
-            return itemPedido;
-        }).collect(Collectors.toList());
-
-        pedido.setProductosAdquiridos(items);
-        pedido.setMontoTotal(items.stream().mapToDouble(item -> item.getPrecio() * item.getCantidad()).sum());
-        pedido.setCantidadArticulos(items.size());
-
-        Pedido nuevoPedido = pedidoRepository.save(pedido);
-
-        carritoService.vaciarCarrito(carrito);
-
-        return nuevoPedido;
     }
+
+
 
     @Transactional(rollbackOn = Exception.class)
     public Pedido pagarPedido(Long pedidoId, Long metodoPagoId) {
