@@ -14,6 +14,7 @@ import com.uade.tpo.demo.service.PedidoService;
 import com.uade.tpo.demo.service.VideojuegoService;
 import com.uade.tpo.demo.service.MetodoPagoService;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import java.util.Map;
 import java.util.List;
 import org.slf4j.Logger;
@@ -140,12 +141,10 @@ public class CarritoController {
             logger.info("Método de pago ID recibido: {}", metodoPagoId);
             logger.info("Tipo de entrega recibido: {}", tipoEntrega);
 
+            // Guarda el JSON de direcciónEnvio directamente como String
             String direccionEnvioJson = (String) request.get("direccionEnvio");
-            Map<String, String> direccionEnvio = direccionEnvioJson != null
-                    ? new ObjectMapper().readValue(direccionEnvioJson, Map.class)
-                    : null;
 
-            logger.info("Dirección de envío procesada: {}", direccionEnvio);
+            logger.info("Dirección de envío recibida: {}", direccionEnvioJson);
 
             MetodoPago metodoPago = metodoPagoId != null 
                                     ? metodoPagoService.obtenerMetodoPagoPorId(metodoPagoId) 
@@ -156,7 +155,7 @@ public class CarritoController {
                 return ResponseEntity.badRequest().build();
             }
 
-            Pedido pedido = pedidoService.crearPedido(carrito, usuario, tipoEntrega, metodoPago, direccionEnvio);
+            Pedido pedido = pedidoService.crearPedido(carrito, usuario, tipoEntrega, metodoPago, direccionEnvioJson);
 
             logger.info("Pedido creado exitosamente: {}", pedido);
 

@@ -49,7 +49,7 @@ public class PedidoService {
     private VideojuegoRepository videojuegoRepository;
 
     @Transactional
-    public Pedido crearPedido(Carrito carrito, Usuario usuario, String tipoEntrega, MetodoPago metodoPago, Map<String, String> direccionEnvio) {
+    public Pedido crearPedido(Carrito carrito, Usuario usuario, String tipoEntrega, MetodoPago metodoPago, String direccionEnvio) {
         try {
             logger.info("Iniciando la creación del pedido. Carrito ID: {}, Usuario: {}, TipoEntrega: {}, MetodoPago: {}",
                     carrito != null ? carrito.getId() : "NULO",
@@ -73,21 +73,9 @@ public class PedidoService {
 
             logger.info("Datos iniciales del pedido asignados: {}", pedido);
 
-            if ("DELIVERY".equalsIgnoreCase(tipoEntrega)) {
-                if (direccionEnvio == null || direccionEnvio.isEmpty()) {
-                    throw new IllegalArgumentException("La dirección de envío es requerida para el tipo de entrega DELIVERY.");
-                }
-
-                String direccion = direccionEnvio.get("direccion");
-                String ciudad = direccionEnvio.get("localidad");
-                String codigoPostal = direccionEnvio.get("codigoPostal");
-                String telefono = direccionEnvio.get("telefono");
-
-                if (direccion == null || ciudad == null || codigoPostal == null || telefono == null) {
-                    throw new IllegalArgumentException("La dirección de envío está incompleta.");
-                }
-
-                pedido.setDireccionEnvio(String.format("%s, %s, %s, Tel: %s", direccion, ciudad, codigoPostal, telefono));
+            // Asignar la dirección de envío si aplica
+            if (direccionEnvio != null && !direccionEnvio.isEmpty()) {
+                pedido.setDireccionEnvio(direccionEnvio); // Guarda el JSON directamente
             }
 
             logger.info("Dirección de envío asignada: {}", pedido.getDireccionEnvio());
