@@ -1,6 +1,5 @@
 package com.uade.tpo.demo.dto;
 
-import com.uade.tpo.demo.entity.Pedido;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 

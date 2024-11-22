@@ -4,20 +4,17 @@ import com.uade.tpo.demo.controllers.config.JwtService;
 import com.uade.tpo.demo.dto.ItemCarritoDTO;
 import com.uade.tpo.demo.entity.Carrito;
 import com.uade.tpo.demo.entity.ItemCarrito;
+import com.uade.tpo.demo.entity.MetodoPago;
 import com.uade.tpo.demo.entity.Pedido;
 import com.uade.tpo.demo.entity.Usuario;
 import com.uade.tpo.demo.entity.Videojuego;
-import com.uade.tpo.demo.exception.InsufficientStockException;
-import com.uade.tpo.demo.exception.ResourceNotFoundException;
 import com.uade.tpo.demo.service.CarritoService;
 import com.uade.tpo.demo.service.PedidoService;
 import com.uade.tpo.demo.service.VideojuegoService;
+import com.uade.tpo.demo.service.MetodoPagoService;
 
 import java.util.Map;
-
 import java.util.List;
-import java.util.stream.Collectors;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,6 +31,9 @@ public class CarritoController {
 
     @Autowired
     private CarritoService carritoService;
+
+    @Autowired
+    private MetodoPagoService metodoPagoService;
 
     @Autowired
     private VideojuegoService videojuegoService;
@@ -114,29 +114,28 @@ public class CarritoController {
 
 
     @PostMapping("/confirmar/{carritoId}")
-    public ResponseEntity<Pedido> confirmarCarrito(@PathVariable Long carritoId) {
+    public ResponseEntity<Pedido> confirmarCarrito(
+        @PathVariable Long carritoId,
+        @RequestBody Map<String, Object> request
+    ) {
         Carrito carrito = carritoService.getCarritoById(carritoId);
-
         if (carrito == null) {
             return ResponseEntity.notFound().build();
         }
 
         Usuario usuario = carrito.getUsuario();
-        Pedido pedido = pedidoService.crearPedido(carrito, usuario);
+        String tipoEntrega = (String) request.get("tipoEntrega");
+        Long metodoPagoId = request.get("metodoPagoId") != null ? Long.valueOf(request.get("metodoPagoId").toString()) : null;
+        Map<String, String> direccionEnvio = (Map<String, String>) request.get("direccionEnvio");
 
-        carrito.getItems().forEach(item -> {
-            Videojuego videojuego = item.getVideojuego();
-            if (videojuego.getStock() < item.getCantidad()) {
-                throw new InsufficientStockException("Stock insuficiente para el videojuego: " + videojuego.getTitulo());
-            }
-            videojuego.setStock(videojuego.getStock() - item.getCantidad());
-            videojuegoService.actualizarVideojuego(videojuego.getId(), videojuego);
-        });
+        MetodoPago metodoPago = metodoPagoId != null ? metodoPagoService.obtenerMetodoPagoPorId(metodoPagoId) : null;
 
-        carritoService.vaciarCarrito(carrito); 
+        Pedido pedido = pedidoService.crearPedido(carrito, usuario, tipoEntrega, metodoPago, direccionEnvio);
 
         return ResponseEntity.ok(pedido);
     }
+
+
 
     @GetMapping("/usuarios/carrito")
     public ResponseEntity<?> getCarritoByUsuarioId(@RequestHeader("Authorization") String token) {

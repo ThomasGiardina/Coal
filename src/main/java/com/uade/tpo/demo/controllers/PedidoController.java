@@ -18,16 +18,21 @@ public class PedidoController {
     private PedidoService pedidoService;
 
     @PostMapping("/{pedidoId}/pagar")
-    public ResponseEntity<Pedido> pagarPedido(@PathVariable Long pedidoId, @RequestBody Map<String, String> request) {
-        Long metodoPagoId = Long.parseLong(request.get("metodoPagoId"));  
-        String cvv = request.get("cvv");  
+    public ResponseEntity<Pedido> pagarPedido(
+        @PathVariable Long pedidoId,
+        @RequestBody Map<String, String> request
+    ) {
+        Long metodoPagoId = Long.parseLong(request.get("metodoPagoId"));
+        String cvv = request.get("cvv");
 
-        System.out.println("Método de pago ID: " + metodoPagoId);
-        System.out.println("CVV ingresado: " + cvv);
+        if (cvv == null || cvv.isEmpty()) {
+            throw new IllegalArgumentException("El CVV es obligatorio.");
+        }
 
         Pedido pedido = pedidoService.pagarPedidoConValidacionCVV(pedidoId, metodoPagoId, cvv);
         return ResponseEntity.ok(pedido);
     }
+
 
     @PostMapping("/{pedidoId}/pagarUnico")
     public ResponseEntity<Pedido> pagarPedidoUnico(@PathVariable Long pedidoId, @RequestBody MetodoPago metodoPago) {

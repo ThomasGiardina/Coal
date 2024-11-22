@@ -1,16 +1,14 @@
 package com.uade.tpo.demo.service;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import java.util.Map;
 
 import com.uade.tpo.demo.entity.Carrito;
-import com.uade.tpo.demo.entity.EventosHistorial;
-import com.uade.tpo.demo.entity.HistorialPedidos;
 import com.uade.tpo.demo.entity.ItemPedido;
 import com.uade.tpo.demo.entity.MetodoPago;
 import com.uade.tpo.demo.entity.Pedido;
@@ -19,10 +17,9 @@ import com.uade.tpo.demo.entity.Videojuego;
 import com.uade.tpo.demo.exception.InsufficientStockException;
 import com.uade.tpo.demo.entity.Pedido.EstadoPedido;
 import com.uade.tpo.demo.repository.PedidoRepository;
-import com.uade.tpo.demo.repository.EventosHistorialRepository;
-import com.uade.tpo.demo.repository.HistorialPedidosRepository;
 import com.uade.tpo.demo.repository.MetodoPagoRepository;
 import com.uade.tpo.demo.repository.VideojuegoRepository;
+
 
 import jakarta.transaction.Transactional;
 
@@ -39,53 +36,59 @@ public class PedidoService {
     private CarritoService carritoService;
 
     @Autowired
+    private MetodoPagoService metodoPagoService;
+
+    @Autowired
     private VideojuegoService videojuegoService;
-
-    @Autowired
-    private HistorialPedidosRepository historialPedidosRepository;
-
-    @Autowired
-    private HistorialPedidosService historialPedidosService;
-
-    @Autowired
-    private EventosHistorialRepository eventosHistorialRepository;
 
     @Autowired
     private VideojuegoRepository videojuegoRepository;
 
     @Transactional
-    public Pedido crearPedido(Carrito carrito, Usuario usuario) {
+    public Pedido crearPedido(Carrito carrito, Usuario usuario, String tipoEntrega, MetodoPago metodoPago, Map<String, String> direccionEnvio) {
+        if (carrito == null || usuario == null || tipoEntrega == null) {
+            throw new IllegalArgumentException("Datos insuficientes para crear el pedido.");
+        }
+
         Pedido pedido = new Pedido();
         pedido.setComprador(usuario);
+        pedido.setNombreComprador(usuario.getFirstName() + " " + usuario.getLastName());
+        pedido.setUsuarioComprador(usuario.getUsername());
+        pedido.setMetodoPago(metodoPago);
+        pedido.setTipoEntrega(Pedido.TipoEntrega.valueOf(tipoEntrega.toUpperCase()));
         pedido.setFecha(LocalDateTime.now());
-        pedido.setEstado(Pedido.EstadoPedido.PENDIENTE);
+        pedido.setEstadoPedido(Pedido.EstadoPedido.PENDIENTE);
 
-        carrito.getItems().forEach(itemCarrito -> {
-            Videojuego videojuego = itemCarrito.getVideojuego();
-            if (videojuego.getStock() < itemCarrito.getCantidad()) {
-                throw new InsufficientStockException("No hay suficiente stock para el videojuego: " + videojuego.getTitulo());
+        if ("DELIVERY".equalsIgnoreCase(tipoEntrega)) {
+            if (direccionEnvio == null || direccionEnvio.isEmpty()) {
+                throw new IllegalArgumentException("La dirección de envío es requerida para el tipo de entrega DELIVERY.");
             }
-        });
+            String direccion = direccionEnvio.get("direccion");
+            String ciudad = direccionEnvio.get("localidad");
+            String codigoPostal = direccionEnvio.get("codigoPostal");
+            String telefono = direccionEnvio.get("telefono");
 
-        carrito.getItems().forEach(itemCarrito -> {
-            Videojuego videojuego = itemCarrito.getVideojuego();
-            videojuegoService.disminuirStock(videojuego.getId(), itemCarrito.getCantidad());
-        });
+            if (direccion == null || ciudad == null || codigoPostal == null || telefono == null) {
+                throw new IllegalArgumentException("La dirección de envío está incompleta.");
+            }
 
-        List<ItemPedido> items = carrito.getItems().stream()
-            .map(itemCarrito -> {
-                ItemPedido itemPedido = new ItemPedido();
-                itemPedido.setVideojuego(itemCarrito.getVideojuego());
-                itemPedido.setCantidad(itemCarrito.getCantidad());
-                itemPedido.setPrecio(itemCarrito.getPrecio());
-                return itemPedido;
-            }).collect(Collectors.toList());
+            pedido.setDireccionEnvio(String.format("%s, %s, %s, Tel: %s", direccion, ciudad, codigoPostal, telefono));
+        }
+
+        List<ItemPedido> items = carrito.getItems().stream().map(itemCarrito -> {
+            ItemPedido itemPedido = new ItemPedido();
+            itemPedido.setVideojuego(itemCarrito.getVideojuego());
+            itemPedido.setCantidad(itemCarrito.getCantidad());
+            itemPedido.setPrecio(itemCarrito.getPrecio());
+            return itemPedido;
+        }).collect(Collectors.toList());
 
         pedido.setProductosAdquiridos(items);
-        pedido.setMontoTotal(carrito.getItems().stream()
-            .mapToDouble(item -> item.getPrecio() * item.getCantidad()).sum());
+        pedido.setMontoTotal(items.stream().mapToDouble(item -> item.getPrecio() * item.getCantidad()).sum());
+        pedido.setCantidadArticulos(items.size());
 
         Pedido nuevoPedido = pedidoRepository.save(pedido);
+
         carritoService.vaciarCarrito(carrito);
 
         return nuevoPedido;
@@ -97,7 +100,7 @@ public class PedidoService {
             Pedido pedido = pedidoRepository.findById(pedidoId)
                 .orElseThrow(() -> new RuntimeException("Pedido no encontrado"));
 
-            if (pedido.getEstado() != EstadoPedido.PENDIENTE) {
+            if (pedido.getEstadoPedido() != EstadoPedido.PENDIENTE) {
                 throw new RuntimeException("El pedido no está en estado pendiente");
             }
 
@@ -124,22 +127,8 @@ public class PedidoService {
             }
 
             pedido.setMetodoPago(metodoPago);
-            pedido.setEstado(EstadoPedido.CONFIRMADO);
+            pedido.setEstadoPedido(EstadoPedido.CONFIRMADO);
             Pedido pedidoConfirmado = pedidoRepository.save(pedido);
-
-            Long usuarioId = pedido.getComprador().getId();  
-            HistorialPedidos historial = historialPedidosService.obtenerHistorialPorUsuario(usuarioId);
-
-            List<ItemPedido> itemsClonados = new ArrayList<>(pedido.getProductosAdquiridos());
-
-            EventosHistorial evento = new EventosHistorial();
-            evento.setHistorial(historial);  
-            evento.setPedido(pedidoConfirmado);
-            evento.setFechaEvento(LocalDateTime.now());
-            evento.setPrecioTotal(pedidoConfirmado.getMontoTotal());
-            evento.setItems(itemsClonados); 
-
-            eventosHistorialRepository.save(evento);
 
             return pedidoConfirmado;
 
@@ -154,7 +143,7 @@ public class PedidoService {
             Pedido pedido = pedidoRepository.findById(pedidoId)
                 .orElseThrow(() -> new RuntimeException("Pedido no encontrado"));
 
-            if (pedido.getEstado() != EstadoPedido.PENDIENTE) {
+            if (pedido.getEstadoPedido() != EstadoPedido.PENDIENTE) {
                 throw new RuntimeException("El pedido no está en estado pendiente");
             }
 
@@ -173,39 +162,14 @@ public class PedidoService {
                     throw new RuntimeException("Tipo de pago no soportado");
             }
 
-            pedido.setEstado(EstadoPedido.CONFIRMADO);
+            pedido.setEstadoPedido(EstadoPedido.CONFIRMADO);
             Pedido pedidoConfirmado = pedidoRepository.save(pedido);
-
-            Long usuarioId = pedido.getComprador().getId();  
-            HistorialPedidos historial = historialPedidosService.obtenerHistorialPorUsuario(usuarioId);
-
-            List<ItemPedido> itemsClonados = new ArrayList<>(pedido.getProductosAdquiridos());
-
-            EventosHistorial evento = new EventosHistorial();
-            evento.setHistorial(historial);  
-            evento.setPedido(pedidoConfirmado);
-            evento.setFechaEvento(LocalDateTime.now());
-            evento.setPrecioTotal(pedidoConfirmado.getMontoTotal());
-            evento.setItems(itemsClonados); 
-
-            eventosHistorialRepository.save(evento);
 
             return pedidoConfirmado;
 
         } catch (Exception e) {
             throw new RuntimeException("Error al procesar el pago: " + e.getMessage());
         }
-    }
-
-    private void registrarEventoHistorial(HistorialPedidos historial, Pedido pedido) {
-        EventosHistorial evento = new EventosHistorial();
-        evento.setHistorial(historial); 
-        evento.setPedido(pedido); 
-        evento.setItems(pedido.getProductosAdquiridos());  
-        evento.setPrecioTotal(pedido.getMontoTotal());  
-        evento.setFechaEvento(LocalDateTime.now());  
-
-        eventosHistorialRepository.save(evento);
     }
 
     private void validarDatosTarjeta(MetodoPago metodoPago) {
@@ -217,11 +181,11 @@ public class PedidoService {
     @Transactional
     public void cancelarPedidosPendientes() {
         List<Pedido> pedidosPendientes = pedidoRepository.findAll().stream()
-            .filter(pedido -> pedido.getEstado() == EstadoPedido.PENDIENTE && pedido.getFecha().isBefore(LocalDateTime.now().minusHours(1)))
+            .filter(pedido -> pedido.getEstadoPedido() == EstadoPedido.PENDIENTE && pedido.getFecha().isBefore(LocalDateTime.now().minusHours(1)))
             .collect(Collectors.toList());
 
         for (Pedido pedido : pedidosPendientes) {
-            pedido.setEstado(EstadoPedido.CANCELADO);
+            pedido.setEstadoPedido(EstadoPedido.CANCELADO);
             pedidoRepository.save(pedido);
         }
     }
@@ -231,18 +195,18 @@ public class PedidoService {
         Pedido pedido = pedidoRepository.findById(pedidoId)
             .orElseThrow(() -> new RuntimeException("Pedido no encontrado"));
 
-        if (pedido.getEstado() != EstadoPedido.PENDIENTE) {
+        if (pedido.getEstadoPedido() != EstadoPedido.PENDIENTE) {
             throw new RuntimeException("El pedido no está en estado pendiente");
         }
 
         MetodoPago metodoPago = metodoPagoRepository.findById(metodoPagoId)
             .orElseThrow(() -> new RuntimeException("Método de pago no encontrado"));
 
+        // Validación del CVV
         if (metodoPago.getTipoPago() == MetodoPago.TipoPago.CREDITO || metodoPago.getTipoPago() == MetodoPago.TipoPago.DEBITO) {
-            if (cvv == null || cvv.isEmpty()) {
-                throw new RuntimeException("El CVV es obligatorio para este tipo de pago.");
+            if (cvv == null || cvv.isEmpty() || !metodoPagoService.validarCVV(metodoPago, cvv)) {
+                throw new RuntimeException("El CVV ingresado no es válido.");
             }
-            validarCVV(cvv); 
         }
 
         switch (metodoPago.getTipoPago()) {
@@ -253,27 +217,23 @@ public class PedidoService {
                 pedido.setMontoTotal(pedido.getMontoTotal() * 0.90);
                 break;
             case CREDITO:
+                // No hay descuento adicional
                 break;
             default:
                 throw new RuntimeException("Tipo de pago no soportado");
         }
 
         pedido.setMetodoPago(metodoPago);
-        pedido.setEstado(EstadoPedido.CONFIRMADO);
+        pedido.setEstadoPedido(EstadoPedido.CONFIRMADO);
         Pedido pedidoConfirmado = pedidoRepository.save(pedido);
 
+        // Actualizar estadísticas de ventas de los videojuegos
         for (ItemPedido item : pedido.getProductosAdquiridos()) {
             Videojuego videojuego = item.getVideojuego();
             videojuego.setVentas(videojuego.getVentas() + item.getCantidad());
             videojuegoRepository.save(videojuego);
         }
-        
-        return pedidoConfirmado;
-    }
 
-    private void validarCVV(String cvv) {
-        if (!cvv.matches("\\d{3,4}")) {
-            throw new RuntimeException("CVV inválido. Debe tener 3 o 4 dígitos.");
-        }
+        return pedidoConfirmado;
     }
 }

@@ -1,6 +1,5 @@
 package com.uade.tpo.demo.controllers;
 
-import com.uade.tpo.demo.dto.IdRequest;
 import com.uade.tpo.demo.dto.VideojuegoDTO;
 import com.uade.tpo.demo.entity.Usuario;
 import com.uade.tpo.demo.entity.Videojuego;
@@ -244,28 +243,6 @@ public class VideojuegoController {
         dto.setCarruselImagen3(videojuego.getCarruselImagen3() != null ? Base64.getEncoder().encodeToString(videojuego.getCarruselImagen3()) : null);
     
         return dto;
-    }    
-
-    // Convertir de DTO a entidad
-    private Videojuego convertirAEntidad(VideojuegoDTO dto) {
-        Videojuego videojuego = new Videojuego();
-        videojuego.setId(dto.getId());
-        videojuego.setTitulo(dto.getTitulo());
-        videojuego.setDescripcion(dto.getDescripcion());
-        videojuego.setPrecio(dto.getPrecio());
-        videojuego.setPlataforma(dto.getPlataforma());
-        videojuego.setCategorias(dto.getCategorias());
-        videojuego.setStock(dto.getStock());
-        videojuego.setFechaLanzamiento(dto.getFechaLanzamiento());  
-        videojuego.setDesarrolladora(dto.getDesarrolladora());
-        videojuego.setFoto(dto.getFoto() != null ? Base64.getDecoder().decode(dto.getFoto()) : null);
-    
-        // Agregar imágenes del carrusel
-        videojuego.setCarruselImagen1(dto.getCarruselImagen1() != null ? Base64.getDecoder().decode(dto.getCarruselImagen1()) : null);
-        videojuego.setCarruselImagen2(dto.getCarruselImagen2() != null ? Base64.getDecoder().decode(dto.getCarruselImagen2()) : null);
-        videojuego.setCarruselImagen3(dto.getCarruselImagen3() != null ? Base64.getDecoder().decode(dto.getCarruselImagen3()) : null);
-    
-        return videojuego;
     }    
 
 }

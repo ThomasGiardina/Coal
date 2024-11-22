@@ -1,6 +1,5 @@
 package com.uade.tpo.demo.service;
 
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.io.IOException;
@@ -15,12 +14,10 @@ import com.uade.tpo.demo.controllers.auth.AuthenticationResponse;
 import com.uade.tpo.demo.controllers.auth.RegisterRequest;
 import com.uade.tpo.demo.controllers.config.JwtService;
 import com.uade.tpo.demo.entity.Carrito;
-import com.uade.tpo.demo.entity.HistorialPedidos;
 import com.uade.tpo.demo.entity.Rol;
 import com.uade.tpo.demo.entity.Usuario;
 import com.uade.tpo.demo.repository.UserRepository;
 import com.uade.tpo.demo.repository.CarritoRepository;
-import com.uade.tpo.demo.repository.HistorialPedidosRepository;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j; 
@@ -34,7 +31,6 @@ public class AuthenticationService {
         private final PasswordEncoder passwordEncoder;
         private final JwtService jwtService;
         private final AuthenticationManager authenticationManager;
-        private final HistorialPedidosRepository historialPedidosRepository;
 
         public AuthenticationResponse register(RegisterRequest request) {
                 log.info("Iniciando proceso de registro para: {}", request.getEmail());
@@ -70,10 +66,6 @@ public class AuthenticationService {
                 
                 Carrito carrito = new Carrito();
                 carrito.setUsuario(savedUser);
-                
-                HistorialPedidos historialPedidos = new HistorialPedidos();
-                historialPedidos.setUsuario(savedUser);
-                historialPedidosRepository.save(historialPedidos);
                 
                 carritoRepository.save(carrito);
                 savedUser.setCarrito(carrito);
