@@ -14,21 +14,16 @@ import com.uade.tpo.demo.entity.MetodoPago;
 import com.uade.tpo.demo.entity.Pedido;
 import com.uade.tpo.demo.entity.Usuario;
 import com.uade.tpo.demo.entity.Videojuego;
-import com.uade.tpo.demo.exception.InsufficientStockException;
 import com.uade.tpo.demo.entity.Pedido.EstadoPedido;
 import com.uade.tpo.demo.repository.PedidoRepository;
 import com.uade.tpo.demo.repository.MetodoPagoRepository;
 import com.uade.tpo.demo.repository.VideojuegoRepository;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 
 import jakarta.transaction.Transactional;
 
 @Service
 public class PedidoService {
-
-    private static final Logger logger = LoggerFactory.getLogger(PedidoService.class);
 
     @Autowired
     private PedidoRepository pedidoRepository;
@@ -49,67 +44,51 @@ public class PedidoService {
     private VideojuegoRepository videojuegoRepository;
 
     @Transactional
-    public Pedido crearPedido(Carrito carrito, Usuario usuario, String tipoEntrega, MetodoPago metodoPago, String direccionEnvio) {
-        try {
-            logger.info("Iniciando la creación del pedido. Carrito ID: {}, Usuario: {}, TipoEntrega: {}, MetodoPago: {}",
-                    carrito != null ? carrito.getId() : "NULO",
-                    usuario != null ? usuario.getId() : "NULO",
-                    tipoEntrega,
-                    metodoPago);
-
-            if (carrito == null || usuario == null || tipoEntrega == null) {
-                throw new IllegalArgumentException("Datos insuficientes para crear el pedido.");
-            }
-
-            Pedido pedido = new Pedido();
-            pedido.setComprador(usuario);
-            pedido.setNombreComprador(usuario.getFirstName() + " " + usuario.getLastName());
-            pedido.setUsuarioComprador(usuario.getUsername());
-            pedido.setMetodoPago(metodoPago);
-            pedido.setTipoPago(metodoPago.getTipoPago());
-            pedido.setTipoEntrega(Pedido.TipoEntrega.valueOf(tipoEntrega.toUpperCase()));
-            pedido.setFecha(LocalDateTime.now());
-            pedido.setEstadoPedido(Pedido.EstadoPedido.PENDIENTE);
-
-            logger.info("Datos iniciales del pedido asignados: {}", pedido);
-
-            // Asignar la dirección de envío si aplica
-            if (direccionEnvio != null && !direccionEnvio.isEmpty()) {
-                pedido.setDireccionEnvio(direccionEnvio); // Guarda el JSON directamente
-            }
-
-            logger.info("Dirección de envío asignada: {}", pedido.getDireccionEnvio());
-
-            List<ItemPedido> items = carrito.getItems().stream().map(itemCarrito -> {
-                ItemPedido itemPedido = new ItemPedido();
-                itemPedido.setVideojuego(itemCarrito.getVideojuego());
-                itemPedido.setCantidad(itemCarrito.getCantidad());
-                itemPedido.setPrecio(itemCarrito.getPrecio());
-                return itemPedido;
-            }).collect(Collectors.toList());
-
-            pedido.setProductosAdquiridos(items);
-            pedido.setMontoTotal(items.stream().mapToDouble(item -> item.getPrecio() * item.getCantidad()).sum());
-            pedido.setCantidadArticulos(items.size());
-
-            logger.info("Monto total calculado: {}, Cantidad de artículos: {}", pedido.getMontoTotal(), pedido.getCantidadArticulos());
-
-            Pedido nuevoPedido = pedidoRepository.save(pedido);
-
-            logger.info("Pedido guardado en la base de datos. ID: {}", nuevoPedido.getId());
-
-            carritoService.vaciarCarrito(carrito);
-
-            logger.info("Carrito ID: {} vaciado exitosamente.", carrito.getId());
-
-            return nuevoPedido;
-        } catch (Exception e) {
-            logger.error("Error al crear el pedido: {}", e.getMessage(), e);
-            throw e;
+    public Pedido crearPedido(
+        Long carritoId,
+        String tipoEntrega,
+        Long metodoPagoId,
+        String direccionEnvio,
+        String nombreComprador,
+        double montoTotal,
+        int cantidadArticulos,
+        String estadoPedido,
+        Long idComprador
+    ) {
+        Carrito carrito = carritoService.getCarritoById(carritoId);
+        if (carrito == null) {
+            throw new RuntimeException("Carrito no encontrado");
         }
+        MetodoPago metodoPago = metodoPagoId != null ? metodoPagoService.obtenerMetodoPagoPorId(metodoPagoId) : null;
+
+        Pedido pedido = new Pedido();
+        pedido.setCantidadArticulos(cantidadArticulos);
+        pedido.setDireccionEnvio(direccionEnvio);
+        pedido.setEstadoPedido(Pedido.EstadoPedido.valueOf(estadoPedido.toUpperCase())); // Enum
+        pedido.setFecha(LocalDateTime.now());
+        pedido.setMontoTotal(montoTotal);
+        pedido.setNombreComprador(nombreComprador);
+        pedido.setTipoEntrega(Pedido.TipoEntrega.valueOf(tipoEntrega.toUpperCase()));
+        pedido.setTipoPago(metodoPago != null ? metodoPago.getTipoPago() : MetodoPago.TipoPago.EFECTIVO);
+        pedido.setUsuarioComprador(carrito.getUsuario().getUsername());
+        pedido.setComprador(carrito.getUsuario());
+        pedido.setMetodoPago(metodoPago); 
+
+        List<ItemPedido> itemsPedido = carrito.getItems().stream().map(itemCarrito -> {
+            ItemPedido itemPedido = new ItemPedido();
+            itemPedido.setVideojuego(itemCarrito.getVideojuego());
+            itemPedido.setCantidad(itemCarrito.getCantidad());
+            itemPedido.setPrecio(itemCarrito.getVideojuego().getPrecio());
+            return itemPedido;
+        }).collect(Collectors.toList());
+        pedido.setProductosAdquiridos(itemsPedido);
+
+        Pedido nuevoPedido = pedidoRepository.save(pedido);
+
+        carritoService.vaciarCarrito(carrito);
+
+        return nuevoPedido;
     }
-
-
 
     @Transactional(rollbackOn = Exception.class)
     public Pedido pagarPedido(Long pedidoId, Long metodoPagoId) {
@@ -234,7 +213,6 @@ public class PedidoService {
                 pedido.setMontoTotal(pedido.getMontoTotal() * 0.90);
                 break;
             case CREDITO:
-                // No hay descuento adicional
                 break;
             default:
                 throw new RuntimeException("Tipo de pago no soportado");
@@ -244,7 +222,6 @@ public class PedidoService {
         pedido.setEstadoPedido(EstadoPedido.CONFIRMADO);
         Pedido pedidoConfirmado = pedidoRepository.save(pedido);
 
-        // Actualizar estadísticas de ventas de los videojuegos
         for (ItemPedido item : pedido.getProductosAdquiridos()) {
             Videojuego videojuego = item.getVideojuego();
             videojuego.setVentas(videojuego.getVentas() + item.getCantidad());
@@ -253,4 +230,62 @@ public class PedidoService {
 
         return pedidoConfirmado;
     }
+
+    @Transactional
+    public Pedido crearPedidoDesdeCarrito(
+        Long carritoId,
+        String tipoEntrega,
+        Long metodoPagoId,
+        String direccionEnvio,
+        List<Map<String, Object>> itemsCarrito
+    ) {
+        Carrito carrito = carritoService.getCarritoById(carritoId);
+        if (carrito == null) {
+            throw new RuntimeException("Carrito no encontrado");
+        }
+
+        MetodoPago metodoPago = metodoPagoService.obtenerMetodoPagoPorId(metodoPagoId);
+        if (metodoPago == null) {
+            throw new RuntimeException("Método de pago no encontrado");
+        }
+
+        List<ItemPedido> itemsPedido = itemsCarrito.stream().map(item -> {
+            ItemPedido itemPedido = new ItemPedido();
+            Long videojuegoId = Long.valueOf(item.get("videojuegoId").toString());
+            Videojuego videojuego = videojuegoService.obtenerVideojuegoPorId(videojuegoId);
+
+            if (videojuego.getStock() < (Integer) item.get("cantidad")) {
+                throw new RuntimeException("Stock insuficiente para el videojuego: " + videojuego.getTitulo());
+            }
+
+            itemPedido.setVideojuego(videojuego);
+            itemPedido.setCantidad((Integer) item.get("cantidad"));
+            itemPedido.setPrecio((Double) item.get("precio"));
+            return itemPedido;
+        }).collect(Collectors.toList());
+
+        Usuario usuario = carrito.getUsuario();
+        Pedido pedido = new Pedido();
+        pedido.setComprador(usuario);
+        pedido.setNombreComprador(usuario.getFirstName() + " " + usuario.getLastName());
+        pedido.setUsuarioComprador(usuario.getUsername());
+        pedido.setMetodoPago(metodoPago);
+        pedido.setTipoPago(metodoPago.getTipoPago());
+        pedido.setTipoEntrega(Pedido.TipoEntrega.valueOf(tipoEntrega.toUpperCase()));
+        pedido.setDireccionEnvio(direccionEnvio);
+        pedido.setProductosAdquiridos(itemsPedido);
+        pedido.setMontoTotal(itemsPedido.stream()
+                .mapToDouble(item -> item.getPrecio() * item.getCantidad())
+                .sum());
+        pedido.setCantidadArticulos(itemsPedido.size());
+        pedido.setFecha(LocalDateTime.now());
+        pedido.setEstadoPedido(Pedido.EstadoPedido.PENDIENTE);
+
+        Pedido nuevoPedido = pedidoRepository.save(pedido);
+
+        carritoService.vaciarCarrito(carrito);
+
+        return nuevoPedido;
+    }
+
 }

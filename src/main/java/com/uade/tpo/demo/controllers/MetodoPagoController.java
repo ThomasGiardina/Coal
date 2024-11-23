@@ -1,14 +1,11 @@
 package com.uade.tpo.demo.controllers;
 
 import com.uade.tpo.demo.entity.MetodoPago;
-import com.uade.tpo.demo.entity.Pedido;
 import com.uade.tpo.demo.entity.Usuario;
 import com.uade.tpo.demo.repository.UserRepository;
 import com.uade.tpo.demo.service.MetodoPagoService;
-import com.uade.tpo.demo.service.PedidoService;
 import com.uade.tpo.demo.controllers.config.JwtService;
 import com.uade.tpo.demo.dto.MetodoPagoDTO;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -20,14 +17,11 @@ import java.util.stream.Collectors;
 public class MetodoPagoController {
 
     private final MetodoPagoService metodoPagoService;
-    private final PedidoService pedidoService;
     private final UserRepository userRepository;
     private final JwtService jwtService;
 
-    @Autowired
-    public MetodoPagoController(MetodoPagoService metodoPagoService, PedidoService pedidoService, UserRepository userRepository, JwtService jwtService) {
+    public MetodoPagoController(MetodoPagoService metodoPagoService, UserRepository userRepository, JwtService jwtService) {
         this.metodoPagoService = metodoPagoService;
-        this.pedidoService = pedidoService;
         this.userRepository = userRepository;
         this.jwtService = jwtService;
     }

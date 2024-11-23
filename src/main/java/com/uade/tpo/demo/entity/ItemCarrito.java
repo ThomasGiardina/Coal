@@ -11,7 +11,7 @@ public class ItemCarrito {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "videojuego_id")
     private Videojuego videojuego;
 

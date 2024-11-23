@@ -7,6 +7,7 @@ import com.uade.tpo.demo.entity.ItemCarrito;
 import com.uade.tpo.demo.entity.Usuario;
 import com.uade.tpo.demo.entity.Videojuego;
 import com.uade.tpo.demo.exception.ResourceNotFoundException;
+import com.uade.tpo.demo.repository.ItemCarritoRepository;
 import com.uade.tpo.demo.repository.UserRepository;
 
 import org.slf4j.Logger;
@@ -15,11 +16,16 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import java.util.Optional;
 
+import java.util.List;
+
 @Service
 public class CarritoService {
     private static final Logger logger = LoggerFactory.getLogger(CarritoService.class);
     @Autowired
     private CarritoDAO carritoDAO;
+
+    @Autowired
+    private ItemCarritoRepository itemCarritoRepository;
 
     @Autowired
     private ItemCarritoDAO itemCarritoDAO;
@@ -37,41 +43,48 @@ public class CarritoService {
 
     public void addItemToCarrito(Long carritoId, Videojuego videojuego, Integer cantidad) {
         Carrito carrito = getCarritoById(carritoId);
-        if (carrito != null) {
-            ItemCarrito itemExistente = carrito.getItems().stream()
-                .filter(item -> item.getVideojuego().getId().equals(videojuego.getId()))
-                .findFirst()
-                .orElse(null);
-
-            if (itemExistente != null) {
-                itemExistente.setCantidad(itemExistente.getCantidad() + cantidad);
-                itemCarritoDAO.save(itemExistente);
-            } else {
-                ItemCarrito item = new ItemCarrito();
-                item.setVideojuego(videojuego);
-                item.setCantidad(cantidad);
-                item.setCarrito(carrito);
-                item.setTitulo(videojuego.getTitulo());
-                item.setPrecio(videojuego.getPrecio());
-                item.setPlataforma(videojuego.getPlataforma());
-                carrito.getItems().add(item);
-                itemCarritoDAO.save(item);
-            }
-            carritoDAO.save(carrito);
+        if (carrito == null) {
+            throw new ResourceNotFoundException("Carrito no encontrado");
         }
-    }
+    
+        Optional<ItemCarrito> itemExistente = itemCarritoDAO.findByCarritoIdAndVideojuegoId(carritoId, videojuego.getId());
+        if (itemExistente.isPresent()) {
+            ItemCarrito item = itemExistente.get();
+            int nuevaCantidad = item.getCantidad() + cantidad;
+    
+            if (nuevaCantidad > videojuego.getStock()) {
+                throw new IllegalArgumentException("Stock insuficiente para agregar al carrito. Stock disponible: " + videojuego.getStock());
+            }
+    
+            item.setCantidad(nuevaCantidad);
+            itemCarritoDAO.save(item);
+            logger.info("Actualizado item existente en el carrito: " + item.getId() + " con cantidad: " + nuevaCantidad);
+        } else {
+            if (cantidad > videojuego.getStock()) {
+                throw new IllegalArgumentException("Stock insuficiente para agregar al carrito. Stock disponible: " + videojuego.getStock());
+            }
+    
+            ItemCarrito nuevoItem = new ItemCarrito();
+            nuevoItem.setVideojuego(videojuego);
+            nuevoItem.setCantidad(cantidad);
+            nuevoItem.setCarrito(carrito);
+            nuevoItem.setTitulo(videojuego.getTitulo());
+            nuevoItem.setPrecio(videojuego.getPrecio());
+            nuevoItem.setPlataforma(videojuego.getPlataforma());
+            itemCarritoDAO.save(nuevoItem);
+            logger.info("Nuevo item agregado al carrito: " + nuevoItem.getId());
+        }
+    }    
 
     public void removeItemFromCarrito(Long itemId) {
-        ItemCarrito item = itemCarritoDAO.findById(itemId).orElse(null);
-        if (item != null) {
-            Carrito carrito = item.getCarrito();
-            carrito.getItems().remove(item);
-            itemCarritoDAO.delete(item);
-            carritoDAO.save(carrito);
+        Optional<ItemCarrito> itemCarrito = itemCarritoRepository.findById(itemId);
+        if (itemCarrito.isPresent()) {
+            itemCarritoRepository.delete(itemCarrito.get());
         } else {
-            throw new ResourceNotFoundException("Item no encontrado");
+            throw new IllegalArgumentException("Item no encontrado en el carrito.");
         }
     }
+    
 
     public void vaciarCarrito(Carrito carrito) {
         for (ItemCarrito item : carrito.getItems()) {
@@ -80,40 +93,43 @@ public class CarritoService {
         carrito.getItems().clear();
         carritoDAO.save(carrito);
     }
+    
 
     public Carrito getCarritoByUsuarioId(Long usuarioId) {
         Optional<Carrito> optionalCarrito = carritoDAO.findByUsuarioId(usuarioId);
         
-        if (!optionalCarrito.isPresent()) {
+        if (optionalCarrito.isEmpty()) {
             logger.info("No se encontró carrito para el usuario con ID: " + usuarioId + ", creando uno nuevo.");
             Carrito nuevoCarrito = new Carrito();
-            
+    
             Usuario usuario = userRepository.findById(usuarioId)
                     .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado"));
     
             nuevoCarrito.setUsuario(usuario);
-    
-            Carrito carritoGuardado = carritoDAO.save(nuevoCarrito);  
+            Carrito carritoGuardado = carritoDAO.save(nuevoCarrito);
     
             logger.info("Nuevo carrito creado con ID: " + carritoGuardado.getId());
-            return carritoGuardado;  
+            return carritoGuardado;
         }
-        
-        return optionalCarrito.get(); 
-    }
     
-
+        Carrito carrito = optionalCarrito.get();
+        List<ItemCarrito> items = itemCarritoRepository.findByCarritoIdWithVideojuegos(carrito.getId());
+        carrito.setItems(items);
+        return carrito;
+    }       
 
     public void updateItemQuantityByItemId(Long itemId, int nuevaCantidad) {
-        // Buscar el ítem directamente por su itemId
         ItemCarrito item = itemCarritoDAO.findById(itemId)
                 .orElseThrow(() -> new ResourceNotFoundException("Item no encontrado"));
 
         item.setCantidad(nuevaCantidad);
-        itemCarritoDAO.save(item);  // Guardar los cambios
+        itemCarritoDAO.save(item);
     }
     
-    
+    public ItemCarrito getItemByCarritoAndVideojuego(Long carritoId, Long videojuegoId) {
+        return itemCarritoDAO.findByCarritoIdAndVideojuegoId(carritoId, videojuegoId)
+                .orElse(null);
+    }
     
     
 }

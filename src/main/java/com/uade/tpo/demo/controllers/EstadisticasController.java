@@ -2,7 +2,6 @@ package com.uade.tpo.demo.controllers;
 
 import com.uade.tpo.demo.dto.ProductoMasVendidoDTO;
 import com.uade.tpo.demo.dto.UltimasVentasDTO;
-import com.uade.tpo.demo.entity.Pedido;
 import com.uade.tpo.demo.service.EstadisticasService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;

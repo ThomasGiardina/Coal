@@ -15,51 +15,51 @@ public class Pedido {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id; // ID del pedido
+    private Long id;
 
     @ManyToOne
     @JoinColumn(name = "id_comprador", nullable = false)
     @JsonBackReference
-    private Usuario comprador; // Relación con Usuario (ID Comprador)
+    private Usuario comprador;
 
     @Column(nullable = false)
-    private String nombreComprador; // Nombre del comprador (obtenido de Usuario)
+    private String nombreComprador;
 
     @Column(nullable = false)
-    private String usuarioComprador; // Username del comprador (obtenido de Usuario)
+    private String usuarioComprador;
 
     @ManyToOne
     @JoinColumn(name = "id_metodo_pago", nullable = false)
-    private MetodoPago metodoPago; // Relación con MetodoPago (ID Método Pago)
+    private MetodoPago metodoPago;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private MetodoPago.TipoPago tipoPago; // Tipo de pago (EFECTIVO, DEBITO, CREDITO)
+    private MetodoPago.TipoPago tipoPago;
 
     @Column(nullable = false)
-    private LocalDateTime fecha; // Fecha del pedido
+    private LocalDateTime fecha;
 
     @Column(nullable = false)
-    private Double montoTotal; // Monto total del pedido
+    private Double montoTotal;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private EstadoPedido estadoPedido; // Estado del pedido (PENDIENTE, CONFIRMADO, CANCELADO)
+    private EstadoPedido estadoPedido;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 255) 
-    private TipoEntrega tipoEntrega; // Tipo de entrega (Delivery o RetiroLocal)
+    private TipoEntrega tipoEntrega;
 
     @Column(name = "direccion_envio")
     private String direccionEnvio;
 
     @Column(nullable = false)
-    private int cantidadArticulos; // Cantidad de artículos en el pedido
+    private int cantidadArticulos;
 
     @OneToMany(cascade = CascadeType.ALL)
     @JoinColumn(name = "pedido_id")
     @JsonManagedReference
-    private List<ItemPedido> productosAdquiridos; // Lista de productos adquiridos en el pedido
+    private List<ItemPedido> productosAdquiridos;
 
     public enum EstadoPedido {
         PENDIENTE,
@@ -69,6 +69,6 @@ public class Pedido {
 
     public enum TipoEntrega {
         ENVIO,
-        DELIVERY
+        RETIRO
     }
 }
