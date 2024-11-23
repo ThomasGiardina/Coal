@@ -96,8 +96,8 @@ public class CarritoService {
     
 
     public Carrito getCarritoByUsuarioId(Long usuarioId) {
-        Optional<Carrito> optionalCarrito = carritoDAO.findByUsuarioId(usuarioId);
-        
+        Optional<Carrito> optionalCarrito = carritoDAO.findCarritoByUsuarioIdWithItems(usuarioId);
+    
         if (optionalCarrito.isEmpty()) {
             logger.info("No se encontró carrito para el usuario con ID: " + usuarioId + ", creando uno nuevo.");
             Carrito nuevoCarrito = new Carrito();
@@ -106,17 +106,12 @@ public class CarritoService {
                     .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado"));
     
             nuevoCarrito.setUsuario(usuario);
-            Carrito carritoGuardado = carritoDAO.save(nuevoCarrito);
-    
-            logger.info("Nuevo carrito creado con ID: " + carritoGuardado.getId());
-            return carritoGuardado;
+            return carritoDAO.save(nuevoCarrito);
         }
     
-        Carrito carrito = optionalCarrito.get();
-        List<ItemCarrito> items = itemCarritoRepository.findByCarritoIdWithVideojuegos(carrito.getId());
-        carrito.setItems(items);
-        return carrito;
-    }       
+        return optionalCarrito.get();
+    }
+    
 
     public void updateItemQuantityByItemId(Long itemId, int nuevaCantidad) {
         ItemCarrito item = itemCarritoDAO.findById(itemId)

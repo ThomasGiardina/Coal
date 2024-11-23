@@ -20,6 +20,8 @@ public class Carrito {
     @JsonBackReference
     private Usuario usuario;
 
+    @ToString.Exclude
     @OneToMany(mappedBy = "carrito", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ItemCarrito> items;
 }
+
