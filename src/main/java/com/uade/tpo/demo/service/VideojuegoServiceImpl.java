@@ -2,7 +2,6 @@ package com.uade.tpo.demo.service;
 
 import com.uade.tpo.demo.entity.ItemPedido;
 import com.uade.tpo.demo.entity.Videojuego;
-import com.uade.tpo.demo.entity.Videojuego.CategoriaJuego;
 import com.uade.tpo.demo.exception.VideojuegoNotFoundException;
 import com.uade.tpo.demo.repository.VideojuegoRepository;
 import com.uade.tpo.demo.repository.ItemPedidoRepository;
@@ -61,47 +60,6 @@ public class VideojuegoServiceImpl implements VideojuegoService {
             itemPedidoRepository.delete(item);
         }
         videojuegoRepository.delete(videojuego);
-    }
-
-    @Override
-    public Videojuego agregarStock(Long videojuegoId, int cantidad) throws VideojuegoNotFoundException {
-        Videojuego videojuego = obtenerVideojuegoPorId(videojuegoId);
-        videojuego.setStock(videojuego.getStock() + cantidad);
-        return videojuegoRepository.save(videojuego);
-    }
-
-    @Override
-    public Videojuego disminuirStock(Long videojuegoId, int cantidad) throws VideojuegoNotFoundException {
-        Videojuego videojuego = obtenerVideojuegoPorId(videojuegoId);
-        if (videojuego.getStock() < cantidad) {
-            throw new IllegalArgumentException("No hay suficiente stock disponible.");
-        }
-        videojuego.setStock(videojuego.getStock() - cantidad);
-        return videojuegoRepository.save(videojuego);
-    }
-
-    @Override
-    public List<Videojuego> buscarPorTitulo(String titulo) {
-        return videojuegoRepository.findByTitulo(titulo);
-    }
-
-    @Override
-    public List<Videojuego> buscarPorPlataforma(String plataforma) {
-        return videojuegoRepository.findByPlataforma(plataforma);
-    }
-
-    @Override
-    public List<Videojuego> buscarPorRangoDePrecio(Double minPrecio, Double maxPrecio) {
-        return videojuegoRepository.findByPrecioBetween(minPrecio, maxPrecio);
-    }
-
-    @Override
-    public List<Videojuego> buscarPorDescripcion(String keyword) {
-        return videojuegoRepository.findByDescripcionContaining(keyword);
-    }
-
-    public List<Videojuego> buscarPorCategoria(CategoriaJuego categoria) {
-        return videojuegoRepository.findByCategorias(categoria);
     }
 
     @Override

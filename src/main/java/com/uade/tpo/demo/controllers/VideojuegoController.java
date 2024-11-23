@@ -3,7 +3,6 @@ package com.uade.tpo.demo.controllers;
 import com.uade.tpo.demo.dto.VideojuegoDTO;
 import com.uade.tpo.demo.entity.Usuario;
 import com.uade.tpo.demo.entity.Videojuego;
-import com.uade.tpo.demo.entity.Videojuego.CategoriaJuego;
 import com.uade.tpo.demo.exception.VideojuegoNotFoundException;
 import com.uade.tpo.demo.service.VideojuegoService;
 import com.uade.tpo.demo.repository.UserRepository;
@@ -164,9 +163,6 @@ public class VideojuegoController {
         }
     }
 
-
-
-
     // Eliminar un videojuego por ID
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> eliminarVideojuego(@PathVariable Long id) {
@@ -177,51 +173,6 @@ public class VideojuegoController {
             return ResponseEntity.notFound().build();
         }
     }
-
-    // Agregar stock a un videojuego
-    @PutMapping("/{id}/agregarStock")
-    public ResponseEntity<VideojuegoDTO> agregarStock(@PathVariable Long id, @RequestParam int cantidad) {
-        Videojuego videojuego = videojuegoService.agregarStock(id, cantidad);
-        return ResponseEntity.ok(convertirADTO(videojuego));
-    }
-
-    // Disminuir stock de un videojuego
-    @PutMapping("/{id}/disminuirStock")
-    public ResponseEntity<VideojuegoDTO> disminuirStock(@PathVariable Long id, @RequestParam int cantidad) {
-        Videojuego videojuego = videojuegoService.disminuirStock(id, cantidad);
-        return ResponseEntity.ok(convertirADTO(videojuego));
-    }
-
-    // Buscar videojuegos por título
-    @GetMapping("/buscarPorTitulo")
-    public ResponseEntity<List<VideojuegoDTO>> buscarPorTitulo(@RequestParam String titulo) {
-        List<Videojuego> videojuegos = videojuegoService.buscarPorTitulo(titulo);
-        List<VideojuegoDTO> videojuegosDTO = videojuegos.stream()
-                .map(this::convertirADTO)
-                .collect(Collectors.toList());
-        return ResponseEntity.ok(videojuegosDTO);
-    }
-
-    // Buscar videojuegos por plataforma
-    @GetMapping("/buscarPorPlataforma")
-    public ResponseEntity<List<VideojuegoDTO>> buscarPorPlataforma(@RequestParam String plataforma) {
-        List<Videojuego> videojuegos = videojuegoService.buscarPorPlataforma(plataforma);
-        List<VideojuegoDTO> videojuegosDTO = videojuegos.stream()
-                .map(this::convertirADTO)
-                .collect(Collectors.toList());
-        return ResponseEntity.ok(videojuegosDTO);
-    }
-
-    @GetMapping("/buscarPorCategoria")
-    public ResponseEntity<List<VideojuegoDTO>> buscarPorCategoria(@RequestParam CategoriaJuego categoria) {
-        List<Videojuego> videojuegos = videojuegoService.buscarPorCategoria(categoria);
-        List<VideojuegoDTO> videojuegosDTO = videojuegos.stream()
-                .map(this::convertirADTO)
-                .collect(Collectors.toList());
-        return ResponseEntity.ok(videojuegosDTO);
-    }
-
-    // Métodos de utilidad para convertir entre DTO y Entidad
 
     // Convertir de entidad a DTO
     private VideojuegoDTO convertirADTO(Videojuego videojuego) {

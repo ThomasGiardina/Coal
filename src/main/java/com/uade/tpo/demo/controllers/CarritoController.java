@@ -86,9 +86,6 @@ public class CarritoController {
         }
     }
 
-
-
-    
     @DeleteMapping("/{carritoId}/items/{itemId}")
     public ResponseEntity<?> removeItemFromCarrito(
             @PathVariable Long carritoId,
@@ -196,7 +193,6 @@ public class CarritoController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error al obtener el carrito para el usuario.");
         }
     }
-
 
     @PutMapping("/items/{itemId}")
     public ResponseEntity<?> updateItemQuantity(

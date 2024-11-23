@@ -71,8 +71,6 @@ public class UsuarioService {
                 return new RuntimeException("Usuario no encontrado");
             });
     }
-    
-    
 
     public Usuario obtenerUsuarioActual() {
         String emailUsuarioActual = obtenerEmailUsuarioActual();
