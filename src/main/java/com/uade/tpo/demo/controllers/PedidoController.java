@@ -9,8 +9,10 @@ import com.uade.tpo.demo.entity.MetodoPago;
 import com.uade.tpo.demo.entity.Pedido;
 import com.uade.tpo.demo.service.PedidoService;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/pedidos")
@@ -47,5 +49,24 @@ public class PedidoController {
         List<PedidoDTO> pedidos = pedidoService.getAllPedidos();
         return ResponseEntity.ok(pedidos);
     }
+
+    @GetMapping("/usuario/{usuarioId}")
+    public ResponseEntity<List<PedidoDTO>> getPedidosByUsuario(@PathVariable Long usuarioId) {
+        List<Pedido> pedidos = pedidoService.getPedidosByUsuarioId(usuarioId);
+        List<PedidoDTO> pedidosDTO = pedidos.stream()
+            .map(pedido -> PedidoDTO.builder()
+                .id(pedido.getId())
+                .fecha(pedido.getFecha().toLocalDate())
+                .cliente(pedido.getNombreComprador())
+                .tipoPago(pedido.getTipoPago().toString())
+                .montoTotal(BigDecimal.valueOf(pedido.getMontoTotal()))
+                .cantidadArticulos(pedido.getCantidadArticulos())
+                .tipoEntrega(pedido.getTipoEntrega().toString())
+                .estadoPedido(pedido.getEstadoPedido().toString())
+                .build())
+            .collect(Collectors.toList());
+        return ResponseEntity.ok(pedidosDTO);
+    }
+
 
 }

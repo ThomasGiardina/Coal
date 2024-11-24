@@ -306,4 +306,9 @@ public class PedidoService {
                 .collect(Collectors.toList());
     }
 
+    public List<Pedido> getPedidosByUsuarioId(Long usuarioId) {
+        return pedidoRepository.findByCompradorId(usuarioId);
+    }
+    
+
 }
