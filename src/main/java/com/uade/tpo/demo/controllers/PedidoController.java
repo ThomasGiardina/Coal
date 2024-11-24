@@ -8,6 +8,7 @@ import com.uade.tpo.demo.dto.PedidoDTO;
 import com.uade.tpo.demo.entity.MetodoPago;
 import com.uade.tpo.demo.entity.Pedido;
 import com.uade.tpo.demo.service.PedidoService;
+import com.uade.tpo.demo.dto.ItemPedidoDTO;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -63,10 +64,18 @@ public class PedidoController {
                 .cantidadArticulos(pedido.getCantidadArticulos())
                 .tipoEntrega(pedido.getTipoEntrega().toString())
                 .estadoPedido(pedido.getEstadoPedido().toString())
+                .productosAdquiridos(pedido.getProductosAdquiridos().stream()
+                    .map(item -> ItemPedidoDTO.builder()
+                        .titulo(item.getVideojuego().getTitulo())
+                        .cantidad(item.getCantidad())
+                        .build())
+                    .collect(Collectors.toList()))
                 .build())
             .collect(Collectors.toList());
         return ResponseEntity.ok(pedidosDTO);
     }
+
+
 
 
 }

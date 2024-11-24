@@ -1,6 +1,7 @@
 package com.uade.tpo.demo.entity;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 import jakarta.persistence.*;
@@ -56,10 +57,10 @@ public class Pedido {
     @Column(nullable = false)
     private int cantidadArticulos;
 
-    @OneToMany(cascade = CascadeType.ALL)
-    @JoinColumn(name = "pedido_id")
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "pedido", orphanRemoval = true)
     @JsonManagedReference
-    private List<ItemPedido> productosAdquiridos;
+    private List<ItemPedido> productosAdquiridos = new ArrayList<>();
+
 
     public enum EstadoPedido {
         PENDIENTE,
