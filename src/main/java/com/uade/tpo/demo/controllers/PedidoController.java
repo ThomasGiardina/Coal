@@ -4,11 +4,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import com.uade.tpo.demo.dto.PedidoDTO;
 import com.uade.tpo.demo.entity.MetodoPago;
 import com.uade.tpo.demo.entity.Pedido;
 import com.uade.tpo.demo.service.PedidoService;
 
-import java.util.Map; // Importación necesaria
+import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/pedidos")
@@ -38,6 +40,12 @@ public class PedidoController {
     public ResponseEntity<Pedido> pagarPedidoUnico(@PathVariable Long pedidoId, @RequestBody MetodoPago metodoPago) {
         Pedido pedido = pedidoService.pagarPedidoUnico(pedidoId, metodoPago);
         return ResponseEntity.ok(pedido);
+    }
+
+    @GetMapping
+    public ResponseEntity<List<PedidoDTO>> getAllPedidos() {
+        List<PedidoDTO> pedidos = pedidoService.getAllPedidos();
+        return ResponseEntity.ok(pedidos);
     }
 
 }

@@ -1,5 +1,6 @@
 package com.uade.tpo.demo.service;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -8,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import java.util.Map;
 
+import com.uade.tpo.demo.dto.PedidoDTO;
 import com.uade.tpo.demo.entity.Carrito;
 import com.uade.tpo.demo.entity.ItemPedido;
 import com.uade.tpo.demo.entity.MetodoPago;
@@ -286,6 +288,22 @@ public class PedidoService {
         carritoService.vaciarCarrito(carrito);
 
         return nuevoPedido;
+    }
+
+    public List<PedidoDTO> getAllPedidos() {
+        List<Pedido> pedidos = pedidoRepository.findAll();
+        return pedidos.stream()
+                .map(pedido -> PedidoDTO.builder()
+                        .id(pedido.getId())
+                        .fecha(pedido.getFecha().toLocalDate())
+                        .cliente(pedido.getNombreComprador())
+                        .tipoPago(pedido.getTipoPago().toString()) 
+                        .montoTotal(BigDecimal.valueOf(pedido.getMontoTotal())) 
+                        .cantidadArticulos(pedido.getCantidadArticulos())
+                        .tipoEntrega(pedido.getTipoEntrega().toString()) 
+                        .estadoPedido(pedido.getEstadoPedido().toString()) 
+                        .build())
+                .collect(Collectors.toList());
     }
 
 }
