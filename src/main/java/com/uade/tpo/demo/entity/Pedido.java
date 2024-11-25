@@ -30,12 +30,12 @@ public class Pedido {
     private String usuarioComprador;
 
     @ManyToOne
-    @JoinColumn(name = "id_metodo_pago", nullable = false)
+    @JoinColumn(name = "id_metodo_pago", nullable = true) 
     private MetodoPago metodoPago;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private MetodoPago.TipoPago tipoPago;
+    private Pedido.TipoPago tipoPago; 
 
     @Column(nullable = false)
     private LocalDateTime fecha;
@@ -62,6 +62,7 @@ public class Pedido {
     private List<ItemPedido> productosAdquiridos = new ArrayList<>();
 
 
+    // Enums internos
     public enum EstadoPedido {
         PENDIENTE,
         CONFIRMADO,
@@ -71,5 +72,11 @@ public class Pedido {
     public enum TipoEntrega {
         ENVIO,
         RETIRO
+    }
+
+    public enum TipoPago {
+        EFECTIVO,
+        DEBITO,
+        CREDITO
     }
 }

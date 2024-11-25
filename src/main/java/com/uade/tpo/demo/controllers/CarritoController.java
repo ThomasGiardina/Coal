@@ -1,5 +1,7 @@
 package com.uade.tpo.demo.controllers;
 
+import org.hibernate.Hibernate;
+
 import com.uade.tpo.demo.controllers.config.JwtService;
 import com.uade.tpo.demo.dto.ItemCarritoDTO;
 import com.uade.tpo.demo.entity.Carrito;
@@ -116,29 +118,43 @@ public class CarritoController {
 
 
     @PostMapping("/confirmar/{carritoId}")
-    public ResponseEntity<Pedido> confirmarCarrito(
+    public ResponseEntity<?> confirmarCarrito(
             @PathVariable Long carritoId,
-            @RequestBody Map<String, Object> request
+            @RequestBody Map<String, Object> request,
+            @RequestHeader("Authorization") String authorizationHeader
     ) {
         try {
-            logger.info("Recibiendo solicitud para confirmar carrito con ID: {}", carritoId);
+            String jwt = authorizationHeader.substring(7); 
+            String userEmail = jwtService.extractUsername(jwt);
+
+            Usuario usuarioAutenticado = userRepository.findByEmail(userEmail)
+                    .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado"));
 
             String tipoEntrega = (String) request.get("tipoEntrega");
+            String tipoPago = (String) request.get("tipoPago");
             Long metodoPagoId = request.get("metodoPagoId") != null
                     ? Long.valueOf(request.get("metodoPagoId").toString())
                     : null;
             String direccionEnvio = (String) request.get("direccionEnvio");
 
-            Carrito carrito = carritoService.getCarritoById(carritoId);
-            if (carrito == null) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+            if (tipoPago == null) {
+                throw new IllegalArgumentException("El tipo de pago es obligatorio.");
             }
 
-            Usuario usuario = carrito.getUsuario();
+            Carrito carrito = carritoService.getCarritoById(carritoId);
+            if (carrito == null) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Carrito no encontrado");
+            }
+
+            if (usuarioAutenticado.getId() != carrito.getUsuario().getId()) {
+                throw new IllegalArgumentException("El usuario autenticado no coincide con el propietario del carrito.");
+            }
+            
 
             double montoTotal = carrito.getItems().stream()
                     .mapToDouble(item -> item.getCantidad() * item.getVideojuego().getPrecio())
                     .sum();
+
             int cantidadArticulos = carrito.getItems().stream()
                     .mapToInt(ItemCarrito::getCantidad)
                     .sum();
@@ -146,27 +162,34 @@ public class CarritoController {
             String estadoPedido = Pedido.EstadoPedido.PENDIENTE.name(); 
 
             Pedido pedido = pedidoService.crearPedido(
-                carritoId,
-                tipoEntrega,
-                metodoPagoId,
-                direccionEnvio,
-                usuario.getFirstName() + " " + usuario.getLastName(),
-                montoTotal,
-                cantidadArticulos,
-                estadoPedido,
-                usuario.getId()
+                    carritoId,
+                    tipoEntrega,
+                    metodoPagoId,
+                    direccionEnvio,
+                    usuarioAutenticado.getFirstName() + " " + usuarioAutenticado.getLastName(),
+                    montoTotal,
+                    cantidadArticulos,
+                    estadoPedido,
+                    usuarioAutenticado.getId(), 
+                    tipoPago
             );
 
             logger.info("Pedido creado exitosamente con ID: {}", pedido.getId());
             return ResponseEntity.ok(pedido);
 
-            
-
+        } catch (IllegalArgumentException e) {
+            logger.error("Error en la confirmación del carrito: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         } catch (Exception e) {
-            logger.error("Error al confirmar carrito: {}", e.getMessage(), e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+            logger.error("Error interno al confirmar el carrito: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error interno del servidor");
         }
     }
+
+
+
+
+
 
     @GetMapping("/usuarios/carrito")
     public ResponseEntity<?> getCarritoByUsuarioId(@RequestHeader("Authorization") String token) {
