@@ -1,7 +1,5 @@
 package com.uade.tpo.demo.controllers;
 
-import org.hibernate.Hibernate;
-
 import com.uade.tpo.demo.controllers.config.JwtService;
 import com.uade.tpo.demo.dto.ItemCarritoDTO;
 import com.uade.tpo.demo.entity.Carrito;

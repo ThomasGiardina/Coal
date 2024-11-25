@@ -300,14 +300,31 @@ public class PedidoService {
         Pedido pedido = pedidoRepository.findById(pedidoId)
             .orElseThrow(() -> new RuntimeException("Pedido no encontrado"));
 
-        if (pedido.getEstadoPedido() != EstadoPedido.PENDIENTE) {
-            throw new RuntimeException("El pedido no está en estado pendiente y no puede ser confirmado.");
-        }
-
         pedido.setEstadoPedido(EstadoPedido.CONFIRMADO);
         return pedidoRepository.save(pedido);
     }
 
-    
+
+    @Transactional
+    public Pedido cambiarAPendiente(Long pedidoId) {
+        Pedido pedido = pedidoRepository.findById(pedidoId)
+            .orElseThrow(() -> new RuntimeException("Pedido no encontrado"));
+
+        if (pedido.getEstadoPedido() != EstadoPedido.CONFIRMADO) {
+            throw new RuntimeException("El pedido no está en estado confirmado y no puede cambiar a pendiente.");
+        }
+
+        pedido.setEstadoPedido(EstadoPedido.PENDIENTE);
+        return pedidoRepository.save(pedido);
+    }
+
+    @Transactional
+    public Pedido cancelarPedido(Long pedidoId) {
+        Pedido pedido = pedidoRepository.findById(pedidoId)
+            .orElseThrow(() -> new RuntimeException("Pedido no encontrado"));
+
+        pedido.setEstadoPedido(Pedido.EstadoPedido.CANCELADO);
+        return pedidoRepository.save(pedido);
+    }
 
 }

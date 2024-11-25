@@ -99,9 +99,52 @@ public class PedidoController {
         return ResponseEntity.ok(pedidoDTO);
     }
 
+    @PutMapping("/{pedidoId}/pendiente")
+    public ResponseEntity<PedidoDTO> cambiarAPendiente(@PathVariable Long pedidoId) {
+        Pedido pedidoPendiente = pedidoService.cambiarAPendiente(pedidoId);
 
+        PedidoDTO pedidoDTO = PedidoDTO.builder()
+            .id(pedidoPendiente.getId())
+            .fecha(pedidoPendiente.getFecha().toLocalDate())
+            .cliente(pedidoPendiente.getNombreComprador())
+            .tipoPago(pedidoPendiente.getTipoPago().toString())
+            .montoTotal(BigDecimal.valueOf(pedidoPendiente.getMontoTotal()))
+            .cantidadArticulos(pedidoPendiente.getCantidadArticulos())
+            .tipoEntrega(pedidoPendiente.getTipoEntrega().toString())
+            .estadoPedido(pedidoPendiente.getEstadoPedido().toString())
+            .productosAdquiridos(pedidoPendiente.getProductosAdquiridos().stream()
+                .map(item -> ItemPedidoDTO.builder()
+                    .titulo(item.getVideojuego().getTitulo())
+                    .cantidad(item.getCantidad())
+                    .build())
+                .collect(Collectors.toList()))
+            .build();
 
+        return ResponseEntity.ok(pedidoDTO);
+    }
 
+    @PutMapping("/{pedidoId}/cancelar")
+    public ResponseEntity<PedidoDTO> cancelarPedido(@PathVariable Long pedidoId) {
+        Pedido pedidoCancelado = pedidoService.cancelarPedido(pedidoId);
 
+        PedidoDTO pedidoDTO = PedidoDTO.builder()
+            .id(pedidoCancelado.getId())
+            .fecha(pedidoCancelado.getFecha().toLocalDate())
+            .cliente(pedidoCancelado.getNombreComprador())
+            .tipoPago(pedidoCancelado.getTipoPago().toString())
+            .montoTotal(BigDecimal.valueOf(pedidoCancelado.getMontoTotal()))
+            .cantidadArticulos(pedidoCancelado.getCantidadArticulos())
+            .tipoEntrega(pedidoCancelado.getTipoEntrega().toString())
+            .estadoPedido(pedidoCancelado.getEstadoPedido().toString())
+            .productosAdquiridos(pedidoCancelado.getProductosAdquiridos().stream()
+                .map(item -> ItemPedidoDTO.builder()
+                    .titulo(item.getVideojuego().getTitulo())
+                    .cantidad(item.getCantidad())
+                    .build())
+                .collect(Collectors.toList()))
+            .build();
+
+        return ResponseEntity.ok(pedidoDTO);
+    }
 
 }
