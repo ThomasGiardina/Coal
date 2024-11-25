@@ -297,14 +297,14 @@ public class PedidoService {
                         .id(pedido.getId())
                         .fecha(pedido.getFecha().toLocalDate())
                         .cliente(pedido.getNombreComprador())
-                        .tipoPago(pedido.getTipoPago().toString()) 
-                        .montoTotal(BigDecimal.valueOf(pedido.getMontoTotal())) 
+                        .tipoPago(pedido.getTipoPago().toString())
+                        .montoTotal(BigDecimal.valueOf(pedido.getMontoTotal()))
                         .cantidadArticulos(pedido.getCantidadArticulos())
-                        .tipoEntrega(pedido.getTipoEntrega().toString()) 
-                        .estadoPedido(pedido.getEstadoPedido().toString()) 
+                        .tipoEntrega(pedido.getTipoEntrega().toString())
+                        .estadoPedido(pedido.getEstadoPedido().toString())
                         .build())
                 .collect(Collectors.toList());
-    }
+    }    
 
     public List<Pedido> getPedidosByUsuarioId(Long usuarioId) {
         return pedidoRepository.findByCompradorId(usuarioId);
