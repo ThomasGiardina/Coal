@@ -109,4 +109,22 @@ public ResponseEntity<UsuarioDTO> obtenerUsuarioActual() {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Error al cambiar la contraseña.");
         }
     }
+
+    @PutMapping("/olvidar-contrasena")
+    public ResponseEntity<String> olvidarContrasena(
+            @RequestParam("email") String email,
+            @RequestParam("nuevaContrasena") String nuevaContrasena) {
+        try {
+            boolean result = usuarioService.cambiarContrasenaPorEmail(email, nuevaContrasena);
+            if (result) {
+                return ResponseEntity.ok("Contraseña cambiada exitosamente.");
+            } else {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Correo electrónico no encontrado.");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Error al cambiar la contraseña.");
+        }
+    }
 }
+

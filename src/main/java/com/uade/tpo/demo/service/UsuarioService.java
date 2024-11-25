@@ -114,4 +114,14 @@ public class UsuarioService {
                 .orElseThrow(() -> new UserNotFoundException("Usuario no encontrado con ID: " + id));
     }
 
+    public boolean cambiarContrasenaPorEmail(String email, String nuevaContrasena) {
+        return usuarioRepository.findByEmail(email)
+            .map(usuario -> {
+                usuario.setPassword(passwordEncoder.encode(nuevaContrasena));
+                usuarioRepository.save(usuario);
+                return true;
+            })
+            .orElse(false);
+    }
+
 }

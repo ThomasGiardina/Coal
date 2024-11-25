@@ -35,6 +35,7 @@ public class SecurityConfig {
                 .requestMatchers("PUT", "/videojuegos/**").hasRole("ADMIN")
                 .requestMatchers("DELETE", "/videojuegos/**").hasRole("ADMIN")
                 .requestMatchers("/api/v1/auth/**").permitAll()
+                .requestMatchers("/api/usuario/olvidar-contrasena").permitAll()
                 .requestMatchers("/carritos/**").hasAnyRole("ADMIN", "USER")
                 .requestMatchers("/api/pedidos/**").hasAnyRole("ADMIN", "USER")
                 .requestMatchers("/metodosPago/**").hasRole("USER")
