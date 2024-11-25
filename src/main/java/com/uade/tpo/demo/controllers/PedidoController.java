@@ -75,6 +75,32 @@ public class PedidoController {
         return ResponseEntity.ok(pedidosDTO);
     }
 
+    @PutMapping("/{pedidoId}/confirmar")
+    public ResponseEntity<PedidoDTO> confirmarPedido(@PathVariable Long pedidoId) {
+        Pedido pedidoConfirmado = pedidoService.confirmarPedido(pedidoId);
+
+        PedidoDTO pedidoDTO = PedidoDTO.builder()
+            .id(pedidoConfirmado.getId())
+            .fecha(pedidoConfirmado.getFecha().toLocalDate())
+            .cliente(pedidoConfirmado.getNombreComprador())
+            .tipoPago(pedidoConfirmado.getTipoPago().toString())
+            .montoTotal(BigDecimal.valueOf(pedidoConfirmado.getMontoTotal()))
+            .cantidadArticulos(pedidoConfirmado.getCantidadArticulos())
+            .tipoEntrega(pedidoConfirmado.getTipoEntrega().toString())
+            .estadoPedido(pedidoConfirmado.getEstadoPedido().toString())
+            .productosAdquiridos(pedidoConfirmado.getProductosAdquiridos().stream()
+                .map(item -> ItemPedidoDTO.builder()
+                    .titulo(item.getVideojuego().getTitulo())
+                    .cantidad(item.getCantidad())
+                    .build())
+                .collect(Collectors.toList()))
+            .build();
+
+        return ResponseEntity.ok(pedidoDTO);
+    }
+
+
+
 
 
 

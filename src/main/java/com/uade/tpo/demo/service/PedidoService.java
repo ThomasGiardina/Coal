@@ -309,6 +309,20 @@ public class PedidoService {
     public List<Pedido> getPedidosByUsuarioId(Long usuarioId) {
         return pedidoRepository.findByCompradorId(usuarioId);
     }
+
+    @Transactional
+    public Pedido confirmarPedido(Long pedidoId) {
+        Pedido pedido = pedidoRepository.findById(pedidoId)
+            .orElseThrow(() -> new RuntimeException("Pedido no encontrado"));
+
+        if (pedido.getEstadoPedido() != EstadoPedido.PENDIENTE) {
+            throw new RuntimeException("El pedido no está en estado pendiente y no puede ser confirmado.");
+        }
+
+        pedido.setEstadoPedido(EstadoPedido.CONFIRMADO);
+        return pedidoRepository.save(pedido);
+    }
+
     
 
 }
