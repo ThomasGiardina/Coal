@@ -18,6 +18,8 @@ import com.uade.tpo.demo.entity.Pedido.EstadoPedido;
 import com.uade.tpo.demo.repository.PedidoRepository;
 import com.uade.tpo.demo.repository.MetodoPagoRepository;
 import com.uade.tpo.demo.repository.VideojuegoRepository;
+import com.uade.tpo.demo.dto.ItemPedidoDTO;
+
 
 
 import jakarta.transaction.Transactional;
@@ -273,8 +275,6 @@ public class PedidoService {
         return pedidoConfirmado;
     }
 
-    
-
     public List<PedidoDTO> getAllPedidos() {
         List<Pedido> pedidos = pedidoRepository.findAll();
         return pedidos.stream()
@@ -287,9 +287,17 @@ public class PedidoService {
                         .cantidadArticulos(pedido.getCantidadArticulos())
                         .tipoEntrega(pedido.getTipoEntrega().toString())
                         .estadoPedido(pedido.getEstadoPedido().toString())
+                        .productosAdquiridos(
+                                pedido.getProductosAdquiridos().stream()
+                                        .map(item -> ItemPedidoDTO.builder()
+                                                .titulo(item.getVideojuego().getTitulo()) 
+                                                .cantidad(item.getCantidad())
+                                                .build())
+                                        .collect(Collectors.toList())
+                        )
                         .build())
                 .collect(Collectors.toList());
-    }    
+    }
 
     public List<Pedido> getPedidosByUsuarioId(Long usuarioId) {
         return pedidoRepository.findByCompradorId(usuarioId);

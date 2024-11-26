@@ -79,7 +79,7 @@ public class EstadisticasService {
     
 
     public List<UltimasVentasDTO> obtenerUltimasVentas() {
-        return pedidoRepository.findTop10ByEstadoPedidoOrderByFechaDesc(Pedido.EstadoPedido.CONFIRMADO).stream()
+        return pedidoRepository.findTop5ByEstadoPedidoOrderByFechaDesc(Pedido.EstadoPedido.CONFIRMADO).stream()
                 .map(pedido -> UltimasVentasDTO.builder()
                     .id(pedido.getId())
                     .fecha(pedido.getFecha())
@@ -94,7 +94,6 @@ public class EstadisticasService {
                     .build())
                 .collect(Collectors.toList());
     }
-    
 
     public List<ProductoMasVendidoDTO> obtenerProductosMasVendidos() {
         return videojuegoRepository.findTop5ByOrderByVentasDesc().stream()

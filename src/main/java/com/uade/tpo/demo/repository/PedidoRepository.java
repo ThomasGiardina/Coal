@@ -10,7 +10,8 @@ import java.util.List;
 
 @Repository
 public interface PedidoRepository extends JpaRepository<Pedido, Long>{
-    List<Pedido> findTop10ByOrderByFechaDesc();
+    List<Pedido> findTop5ByEstadoPedidoOrderByFechaDesc(Pedido.EstadoPedido estadoPedido);
+
 
     @Query("SELECT p FROM Pedido p WHERE p.comprador.id = :usuarioId")
     List<Pedido> findByCompradorId(@Param("usuarioId") Long usuarioId);
