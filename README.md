@@ -43,7 +43,7 @@ Este es el repositorio del **backend** para una página web de e-commerce de vid
 
 ## 💻 Desarrolladores
 
-- **Juan Ignacio Dominguez** - Backend Developer  
-- **Thomas Agustin Giardina** - Backend Developer  
-- **Marco Ambrosini** - Backend Developer  
-- **Lucas Gibellini** - Backend Developer
+- **Juan Ignacio Dominguez** 
+- **Thomas Agustin Giardina** 
+- **Marco Ambrosini** 
+- **Lucas Gibellini** 
