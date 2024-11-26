@@ -3,6 +3,7 @@ package com.uade.tpo.demo.service;
 import com.uade.tpo.demo.dto.ProductoMasVendidoDTO;
 import com.uade.tpo.demo.dto.UltimasVentasDTO;
 import com.uade.tpo.demo.entity.Pedido;
+import com.uade.tpo.demo.entity.Videojuego;
 import com.uade.tpo.demo.repository.PedidoRepository;
 import com.uade.tpo.demo.repository.VideojuegoRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,6 +13,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.YearMonth;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class EstadisticasService {
@@ -66,10 +68,15 @@ public class EstadisticasService {
     }
 
     public List<ProductoMasVendidoDTO> obtenerProductosMasVendidos() {
-        List<ProductoMasVendidoDTO> productosMasVendidos = new ArrayList<>();
-        videojuegoRepository.findTop10ByOrderByVentasDesc().forEach(videojuego -> {
-            productosMasVendidos.add(new ProductoMasVendidoDTO(videojuego.getTitulo(), videojuego.getVentas()));
-        });
-        return productosMasVendidos;
+        return videojuegoRepository.findTop5ByOrderByVentasDesc().stream()
+            .map(videojuego -> new ProductoMasVendidoDTO(
+                videojuego.getTitulo(),
+                videojuego.getVentas(),
+                videojuego.getFoto() != null ? "data:image/jpeg;base64," + Base64.getEncoder().encodeToString(videojuego.getFoto()) : null,
+                videojuego.getPlataforma()
+            ))
+            .collect(Collectors.toList());
     }
+    
+
 }

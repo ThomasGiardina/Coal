@@ -301,6 +301,13 @@ public class PedidoService {
             .orElseThrow(() -> new RuntimeException("Pedido no encontrado"));
 
         pedido.setEstadoPedido(EstadoPedido.CONFIRMADO);
+
+        for (ItemPedido item : pedido.getProductosAdquiridos()) {
+            Videojuego videojuego = item.getVideojuego();
+            videojuego.setVentas(videojuego.getVentas() + item.getCantidad());
+            videojuegoRepository.save(videojuego); 
+        }
+        
         return pedidoRepository.save(pedido);
     }
 

@@ -11,4 +11,5 @@ import java.util.List;
 public interface VideojuegoRepository extends JpaRepository<Videojuego, Long> {
     List<Videojuego> findByStockLessThan(Integer stock);
     List<Videojuego> findTop10ByOrderByVentasDesc(); 
+    List<Videojuego> findTop5ByOrderByVentasDesc();
 }

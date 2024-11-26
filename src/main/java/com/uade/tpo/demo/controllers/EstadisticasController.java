@@ -40,6 +40,7 @@ public class EstadisticasController {
         return ResponseEntity.ok(estadisticasService.obtenerProductosMasVendidos());
     }
 
+
     @GetMapping("/ventas-por-categoria")
     public ResponseEntity<Map<String, Integer>> obtenerVentasPorCategoria() {
         return ResponseEntity.ok(estadisticasService.obtenerVentasPorCategoria());
