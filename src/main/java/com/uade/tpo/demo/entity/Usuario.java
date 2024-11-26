@@ -123,9 +123,4 @@ public class Usuario implements UserDetails {
         this.carrito = carrito;
         carrito.setUsuario(this);
     }
-
-    @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL, orphanRemoval = true)
-    @JsonManagedReference
-    private List<Favoritos> favoritos;
-
 }

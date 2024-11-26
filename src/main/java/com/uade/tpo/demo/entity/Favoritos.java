@@ -11,7 +11,6 @@ import lombok.NoArgsConstructor;
 @Entity
 @Table(name = "favoritos", uniqueConstraints = @UniqueConstraint(columnNames = {"usuario_id", "videojuego_id"}))
 public class Favoritos {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -24,3 +23,4 @@ public class Favoritos {
     @JoinColumn(name = "videojuego_id", nullable = false)
     private Videojuego videojuego;
 }
+

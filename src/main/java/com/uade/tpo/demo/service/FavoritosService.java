@@ -8,6 +8,9 @@ import com.uade.tpo.demo.repository.UserRepository;
 import com.uade.tpo.demo.repository.VideojuegoRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import java.util.stream.Collectors;
+import jakarta.persistence.EntityNotFoundException;
+import jakarta.transaction.Transactional;
 
 import java.util.List;
 
@@ -18,32 +21,41 @@ public class FavoritosService {
     private FavoritosRepository favoritosRepository;
 
     @Autowired
-    private UserRepository usuarioRepository;
-
-    @Autowired
     private VideojuegoRepository videojuegoRepository;
 
-    public List<Favoritos> getFavoritosByUsuarioId(Long usuarioId) {
-        return favoritosRepository.findByUsuarioId(usuarioId);
+    @Autowired
+    private UserRepository userRepository;
+
+    public List<Videojuego> obtenerFavoritosDeUsuario(Long usuarioId) {
+        return favoritosRepository.findByUsuarioId(usuarioId)
+            .stream()
+            .map(Favoritos::getVideojuego)
+            .collect(Collectors.toList());
     }
 
-    public void addFavorito(Long usuarioId, Long videojuegoId) {
-        Usuario usuario = usuarioRepository.findById(usuarioId)
-            .orElseThrow(() -> new RuntimeException("Usuario no encontrado."));
-        Videojuego videojuego = videojuegoRepository.findById(videojuegoId)
-                .orElseThrow(() -> new RuntimeException("Videojuego no encontrado."));
-
-        if (favoritosRepository.findByUsuarioIdAndVideojuegoId(usuarioId, videojuegoId).isPresent()) {
-            throw new RuntimeException("El videojuego ya está en favoritos.");
+    public void agregarAFavoritos(Long usuarioId, Long videojuegoId) {
+        if (favoritosRepository.existsByUsuarioIdAndVideojuegoId(usuarioId, videojuegoId)) {
+            System.out.println("El videojuego ya está en favoritos.");
+            return;
         }
-
+    
+        Usuario usuario = userRepository.findById(usuarioId)
+            .orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado"));
+        Videojuego videojuego = videojuegoRepository.findById(videojuegoId)
+            .orElseThrow(() -> new EntityNotFoundException("Videojuego no encontrado"));
+    
         Favoritos favorito = new Favoritos();
         favorito.setUsuario(usuario);
         favorito.setVideojuego(videojuego);
         favoritosRepository.save(favorito);
-    }
+    }    
 
-    public void removeFavorito(Long usuarioId, Long videojuegoId) {
+    @Transactional
+    public void eliminarDeFavoritos(Long usuarioId, Long videojuegoId) {
+        if (!favoritosRepository.existsByUsuarioIdAndVideojuegoId(usuarioId, videojuegoId)) {
+            System.out.println("El videojuego no está en favoritos, no es necesario eliminarlo.");
+            return;
+        }
         favoritosRepository.deleteByUsuarioIdAndVideojuegoId(usuarioId, videojuegoId);
     }
 }
