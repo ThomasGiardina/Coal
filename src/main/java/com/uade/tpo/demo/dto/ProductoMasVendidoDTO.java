@@ -8,4 +8,6 @@ import lombok.Data;
 public class ProductoMasVendidoDTO {
     private String titulo;
     private int ventas;
+    private String fotoUrl;
+    private String plataforma;
 }
