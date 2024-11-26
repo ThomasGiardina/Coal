@@ -46,4 +46,9 @@ public class EstadisticasController {
         return ResponseEntity.ok(estadisticasService.obtenerVentasPorCategoria());
     }
 
+    @GetMapping("/recaudacion-mensual-confirmada")
+    public ResponseEntity<Double> obtenerRecaudacionMensualConfirmada() {
+        return ResponseEntity.ok(estadisticasService.obtenerRecaudacionMensualConfirmada());
+    }
+
 }

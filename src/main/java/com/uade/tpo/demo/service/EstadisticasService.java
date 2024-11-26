@@ -48,12 +48,35 @@ public class EstadisticasService {
 
     public Map<String, Integer> obtenerVentasPorCategoria() {
         Map<String, Integer> ventasPorCategoria = new HashMap<>();
+    
         videojuegoRepository.findAll().forEach(videojuego -> {
-            String categoria = videojuego.getCategorias().toString();
-            ventasPorCategoria.put(categoria, ventasPorCategoria.getOrDefault(categoria, 0) + videojuego.getVentas());
+            videojuego.getCategorias().forEach(categoria -> {
+                ventasPorCategoria.put(
+                    categoria.name(), 
+                    ventasPorCategoria.getOrDefault(categoria.name(), 0) + videojuego.getVentas()
+                );
+            });
         });
+    
         return ventasPorCategoria;
     }
+
+    public Double obtenerRecaudacionMensualConfirmada() {
+        YearMonth currentMonth = YearMonth.now();
+        LocalDateTime startOfMonth = currentMonth.atDay(1).atStartOfDay();
+        LocalDateTime endOfMonth = currentMonth.atEndOfMonth().atTime(23, 59, 59);
+    
+        return pedidoRepository.findAll().stream()
+                .filter(pedido -> 
+                    pedido.getEstadoPedido() == Pedido.EstadoPedido.CONFIRMADO &&
+                    !pedido.getFecha().isBefore(startOfMonth) &&
+                    !pedido.getFecha().isAfter(endOfMonth)
+                )
+                .mapToDouble(Pedido::getMontoTotal)
+                .sum();
+    }
+    
+    
 
     public List<UltimasVentasDTO> obtenerUltimasVentas() {
         return pedidoRepository.findTop10ByEstadoPedidoOrderByFechaDesc(Pedido.EstadoPedido.CONFIRMADO).stream()
