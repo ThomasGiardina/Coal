@@ -106,6 +106,29 @@ public class EstadisticasService {
             ))
             .collect(Collectors.toList());
     }
+
+    public Map<String, Double> obtenerGananciasDiariasConfirmadas() {
+        Map<String, Double> gananciasDiarias = new TreeMap<>();
+        
+        pedidoRepository.findAll().stream()
+            .filter(pedido -> pedido.getEstadoPedido() == Pedido.EstadoPedido.CONFIRMADO)
+            .forEach(pedido -> {
+                String fecha = pedido.getFecha().toLocalDate().toString();
+                gananciasDiarias.put(
+                    fecha,
+                    gananciasDiarias.getOrDefault(fecha, 0.0) + pedido.getMontoTotal()
+                );
+            });
+    
+        return gananciasDiarias;
+    }
+    
+    public Double obtenerRecaudacionTotalConfirmada() {
+        return pedidoRepository.findAll().stream()
+                .filter(pedido -> pedido.getEstadoPedido() == Pedido.EstadoPedido.CONFIRMADO)
+                .mapToDouble(Pedido::getMontoTotal)
+                .sum();
+    }
     
 
 }

@@ -51,4 +51,14 @@ public class EstadisticasController {
         return ResponseEntity.ok(estadisticasService.obtenerRecaudacionMensualConfirmada());
     }
 
+    @GetMapping("/ganancias-diarias-confirmadas")
+    public ResponseEntity<Map<String, Double>> obtenerGananciasDiariasConfirmadas() {
+        return ResponseEntity.ok(estadisticasService.obtenerGananciasDiariasConfirmadas());
+    }
+
+    @GetMapping("/recaudacion-total-confirmada")
+    public ResponseEntity<Double> obtenerRecaudacionTotalConfirmada() {
+        return ResponseEntity.ok(estadisticasService.obtenerRecaudacionTotalConfirmada());
+    }
+
 }
