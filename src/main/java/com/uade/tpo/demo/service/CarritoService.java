@@ -83,7 +83,6 @@ public class CarritoService {
         }
     }
     
-
     public void vaciarCarrito(Carrito carrito) {
         for (ItemCarrito item : carrito.getItems()) {
             itemCarritoDAO.delete(item);
