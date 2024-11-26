@@ -56,16 +56,22 @@ public class EstadisticasService {
     }
 
     public List<UltimasVentasDTO> obtenerUltimasVentas() {
-        List<UltimasVentasDTO> ultimasVentas = new ArrayList<>();
-        pedidoRepository.findTop10ByOrderByFechaDesc().forEach(pedido -> {
-            List<UltimasVentasDTO.ItemPedidoDTO> items = new ArrayList<>();
-            pedido.getProductosAdquiridos().forEach(item -> {
-                items.add(new UltimasVentasDTO.ItemPedidoDTO(item.getVideojuego().getTitulo(), item.getCantidad()));
-            });
-            ultimasVentas.add(new UltimasVentasDTO(pedido.getId(), pedido.getFecha(), pedido.getMontoTotal(), items));
-        });
-        return ultimasVentas;
+        return pedidoRepository.findTop10ByEstadoPedidoOrderByFechaDesc(Pedido.EstadoPedido.CONFIRMADO).stream()
+                .map(pedido -> UltimasVentasDTO.builder()
+                    .id(pedido.getId())
+                    .fecha(pedido.getFecha())
+                    .montoTotal(pedido.getMontoTotal())
+                    .estadoPedido(pedido.getEstadoPedido().name())
+                    .items(pedido.getProductosAdquiridos().stream()
+                        .map(item -> new UltimasVentasDTO.ItemPedidoDTO(
+                            item.getVideojuego().getTitulo(),
+                            item.getCantidad()
+                        ))
+                        .collect(Collectors.toList()))
+                    .build())
+                .collect(Collectors.toList());
     }
+    
 
     public List<ProductoMasVendidoDTO> obtenerProductosMasVendidos() {
         return videojuegoRepository.findTop5ByOrderByVentasDesc().stream()

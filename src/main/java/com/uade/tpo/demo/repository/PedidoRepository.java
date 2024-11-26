@@ -13,6 +13,8 @@ public interface PedidoRepository extends JpaRepository<Pedido, Long>{
     List<Pedido> findTop10ByOrderByFechaDesc();
 
     @Query("SELECT p FROM Pedido p WHERE p.comprador.id = :usuarioId")
-List<Pedido> findByCompradorId(@Param("usuarioId") Long usuarioId);
+    List<Pedido> findByCompradorId(@Param("usuarioId") Long usuarioId);
+
+    List<Pedido> findTop10ByEstadoPedidoOrderByFechaDesc(Pedido.EstadoPedido estadoPedido);
 
 }
