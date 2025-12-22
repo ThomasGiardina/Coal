@@ -49,8 +49,8 @@ public class CarritoService {
         if (itemExistente.isPresent()) {
             ItemCarrito item = itemExistente.get();
             int nuevaCantidad = item.getCantidad() + cantidad;
-    
-            if (nuevaCantidad > videojuego.getStock()) {
+            
+            if (!videojuego.isGiftCard() && nuevaCantidad > videojuego.getStock()) {
                 throw new IllegalArgumentException("Stock insuficiente para agregar al carrito. Stock disponible: " + videojuego.getStock());
             }
     
@@ -58,7 +58,7 @@ public class CarritoService {
             itemCarritoDAO.save(item);
             logger.info("Actualizado item existente en el carrito: " + item.getId() + " con cantidad: " + nuevaCantidad);
         } else {
-            if (cantidad > videojuego.getStock()) {
+            if (!videojuego.isGiftCard() && cantidad > videojuego.getStock()) {
                 throw new IllegalArgumentException("Stock insuficiente para agregar al carrito. Stock disponible: " + videojuego.getStock());
             }
     

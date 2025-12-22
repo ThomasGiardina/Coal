@@ -42,6 +42,9 @@ public class PedidoService {
     @Autowired
     private VideojuegoRepository videojuegoRepository;
 
+    @Autowired
+    private GiftCardService giftCardService;
+
     private double calcularDescuento(double montoTotal, MetodoPago.TipoPago tipoPago) {
         switch (tipoPago) {
             case EFECTIVO:
@@ -105,12 +108,13 @@ public class PedidoService {
         List<ItemPedido> itemsPedido = carrito.getItems().stream().map(itemCarrito -> {
             Videojuego videojuego = itemCarrito.getVideojuego();
 
-            if (videojuego.getStock() < itemCarrito.getCantidad()) {
-                throw new IllegalArgumentException("Stock insuficiente para el videojuego: " + videojuego.getTitulo());
+            if (!videojuego.isGiftCard()) {
+                if (videojuego.getStock() < itemCarrito.getCantidad()) {
+                    throw new IllegalArgumentException("Stock insuficiente para el videojuego: " + videojuego.getTitulo());
+                }
+                videojuego.setStock(videojuego.getStock() - itemCarrito.getCantidad());
+                videojuegoRepository.save(videojuego);
             }
-
-            videojuego.setStock(videojuego.getStock() - itemCarrito.getCantidad());
-            videojuegoRepository.save(videojuego);
 
             ItemPedido itemPedido = new ItemPedido();
             itemPedido.setVideojuego(videojuego);
@@ -170,6 +174,9 @@ public class PedidoService {
             pedido.setEstadoPedido(EstadoPedido.CONFIRMADO);
             Pedido pedidoConfirmado = pedidoRepository.save(pedido);
 
+            var codes = giftCardService.generarCodigosParaPedido(pedidoConfirmado);
+            giftCardService.enviarCodigos(pedidoConfirmado, codes);
+
             return pedidoConfirmado;
 
         } catch (Exception e) {
@@ -204,6 +211,9 @@ public class PedidoService {
 
             pedido.setEstadoPedido(EstadoPedido.CONFIRMADO);
             Pedido pedidoConfirmado = pedidoRepository.save(pedido);
+
+            var codes = giftCardService.generarCodigosParaPedido(pedidoConfirmado);
+            giftCardService.enviarCodigos(pedidoConfirmado, codes);
 
             return pedidoConfirmado;
 
@@ -272,6 +282,8 @@ public class PedidoService {
             videojuegoRepository.save(videojuego);
         }
 
+        var codes = giftCardService.generarCodigosParaPedido(pedidoConfirmado);
+        giftCardService.enviarCodigos(pedidoConfirmado, codes);
         return pedidoConfirmado;
     }
 
@@ -316,7 +328,10 @@ public class PedidoService {
             videojuegoRepository.save(videojuego); 
         }
         
-        return pedidoRepository.save(pedido);
+        Pedido confirmado = pedidoRepository.save(pedido);
+        var codes = giftCardService.generarCodigosParaPedido(confirmado);
+        giftCardService.enviarCodigos(confirmado, codes);
+        return confirmado;
     }
 
 

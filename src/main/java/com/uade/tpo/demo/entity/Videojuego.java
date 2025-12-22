@@ -66,6 +66,10 @@ public class Videojuego {
     @Column(nullable = false)
     private int ventas;
 
+    // Indica si el "videojuego" es una gift card (stock infinito)
+    @Column(nullable = false)
+    private boolean giftCard = false;
+
     public enum CategoriaJuego{
         ACCION,
         AVENTURA,
