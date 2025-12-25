@@ -3,7 +3,6 @@ package com.uade.tpo.demo.service;
 import com.uade.tpo.demo.dto.ProductoMasVendidoDTO;
 import com.uade.tpo.demo.dto.UltimasVentasDTO;
 import com.uade.tpo.demo.entity.Pedido;
-import com.uade.tpo.demo.entity.Videojuego;
 import com.uade.tpo.demo.repository.PedidoRepository;
 import com.uade.tpo.demo.repository.VideojuegoRepository;
 import org.springframework.beans.factory.annotation.Autowired;
