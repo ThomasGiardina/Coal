@@ -21,7 +21,7 @@ API RESTful para un e-commerce de videojuegos. Gestiona usuarios, autenticación
 ## Introducción
 Este backend expone endpoints para operar un e-commerce: autenticación y gestión de usuarios, administración de videojuegos (incluyendo imágenes), carritos y pedidos, estadísticas de ventas, favoritos y métodos de pago. Está desarrollado con Spring Boot y persiste datos en MySQL.
 
-## 🚀 Quick Start
+## Quick Start
 
 1. Crear la base de datos MySQL `coal`
 2. Configurar credenciales en `application.properties`
@@ -134,88 +134,88 @@ java -jar target/demo-0.0.1-SNAPSHOT.jar
 ## Endpoints principales
 Las rutas a continuación se basan en las anotaciones encontradas en los controladores.
 
-### Autenticación (`/api/v1/auth`)
-- POST `/register`: registro de usuario.
-- POST `/authenticate`: login, devuelve JWT.
+    ### Autenticación (`/api/v1/auth`)
+    - POST `/register`: registro de usuario.
+    - POST `/authenticate`: login, devuelve JWT.
 
-#### Ejemplo: Login
+        #### Ejemplo: Login
 
-POST `/api/v1/auth/authenticate`
+            POST `/api/v1/auth/authenticate`
 
-Request:
+            Request:
 
-```json
-{
-	"email": "user@mail.com",
-	"password": "1234"
-}
-```
+            ```json
+            {
+                "email": "user@mail.com",
+                "password": "1234"
+            }
+            ```
 
-Response:
+            Response:
 
-```json
-{
-	"token": "eyJhbGciOiJIUzI1NiIs..."
-}
-```
+            ```json
+            {
+                "token": "eyJhbGciOiJIUzI1NiIs..."
+            }
+            ```
 
-### Usuario (`/api/usuario`)
-- GET `/actual`: obtener usuario autenticado.
-- PUT `/actualizar`: actualizar datos del usuario.
-- POST `/actualizar-imagen`: actualizar imagen (multipart).
-- GET `/imagen/{userId}`: obtener imagen por usuario.
-- PUT `/cambiar-contrasena`: cambiar contraseña.
-- PUT `/olvidar-contrasena`: flujo de recuperación.
+    ### Usuario (`/api/usuario`)
+    - GET `/actual`: obtener usuario autenticado.
+    - PUT `/actualizar`: actualizar datos del usuario.
+    - POST `/actualizar-imagen`: actualizar imagen (multipart).
+    - GET `/imagen/{userId}`: obtener imagen por usuario.
+    - PUT `/cambiar-contrasena`: cambiar contraseña.
+    - PUT `/olvidar-contrasena`: flujo de recuperación.
 
-### Videojuegos (`/videojuegos`)
-- POST `/` (multipart/form-data): crear videojuego.
-- POST `/{id}/foto`: subir/actualizar foto.
-- GET `/{id}`: detalle.
-- GET `/`: listado y filtros (según servicio).
-- PUT `/{id}` (multipart/form-data): actualizar.
-- DELETE `/{id}`: eliminar.
+    ### Videojuegos (`/videojuegos`)
+    - POST `/` (multipart/form-data): crear videojuego.
+    - POST `/{id}/foto`: subir/actualizar foto.
+    - GET `/{id}`: detalle.
+    - GET `/`: listado y filtros (según servicio).
+    - PUT `/{id}` (multipart/form-data): actualizar.
+    - DELETE `/{id}`: eliminar.
 
-### Carritos (`/carritos`)
-- GET `/{id}`: obtener carrito.
-- POST `/{carritoId}/items`: agregar ítem al carrito.
-- PUT `/items/{itemId}`: actualizar cantidad/detalle de ítem.
-- DELETE `/{carritoId}/items/{itemId}`: eliminar ítem.
-- POST `/confirmar/{carritoId}`: confirmar carrito → crea pedido.
-- GET `/usuarios/carrito`: carrito del usuario autenticado.
+    ### Carritos (`/carritos`)
+    - GET `/{id}`: obtener carrito.
+    - POST `/{carritoId}/items`: agregar ítem al carrito.
+    - PUT `/items/{itemId}`: actualizar cantidad/detalle de ítem.
+    - DELETE `/{carritoId}/items/{itemId}`: eliminar ítem.
+    - POST `/confirmar/{carritoId}`: confirmar carrito → crea pedido.
+    - GET `/usuarios/carrito`: carrito del usuario autenticado.
 
-### Pedidos (`/api/pedidos`)
-- GET `/`: listado.
-- GET `/usuario/{usuarioId}`: pedidos por usuario.
-- PUT `/{pedidoId}/confirmar`: marcar confirmado.
-- PUT `/{pedidoId}/pendiente`: marcar pendiente.
-- PUT `/{pedidoId}/cancelar`: cancelar pedido.
-- POST `/{pedidoId}/pagar`: pago (carrito completo).
-- POST `/{pedidoId}/pagarUnico`: pago de ítem único.
+    ### Pedidos (`/api/pedidos`)
+    - GET `/`: listado.
+    - GET `/usuario/{usuarioId}`: pedidos por usuario.
+    - PUT `/{pedidoId}/confirmar`: marcar confirmado.
+    - PUT `/{pedidoId}/pendiente`: marcar pendiente.
+    - PUT `/{pedidoId}/cancelar`: cancelar pedido.
+    - POST `/{pedidoId}/pagar`: pago (carrito completo).
+    - POST `/{pedidoId}/pagarUnico`: pago de ítem único.
 
-### Favoritos (`/favoritos`)
-- GET `/`: lista de favoritos del usuario.
-- POST `/{videojuegoId}`: agregar a favoritos.
-- DELETE `/{videojuegoId}`: quitar de favoritos.
+    ### Favoritos (`/favoritos`)
+    - GET `/`: lista de favoritos del usuario.
+    - POST `/{videojuegoId}`: agregar a favoritos.
+    - DELETE `/{videojuegoId}`: quitar de favoritos.
 
-### Métodos de Pago (`/metodosPago`)
-- POST `/`: crear método de pago.
-- GET `/{id}`: detalle.
-- GET `/`: listado.
-- GET `/usuario`: métodos del usuario.
-- PUT `/{id}`: actualizar.
-- DELETE `/{id}`: eliminar.
+    ### Métodos de Pago (`/metodosPago`)
+    - POST `/`: crear método de pago.
+    - GET `/{id}`: detalle.
+    - GET `/`: listado.
+    - GET `/usuario`: métodos del usuario.
+    - PUT `/{id}`: actualizar.
+    - DELETE `/{id}`: eliminar.
 
-### Estadísticas (`/api/estadisticas`)
-- GET `/recaudacion-mensual`
-- GET `/recaudacion-diaria`
-- GET `/ultimas-ventas`
-- GET `/productos-mas-vendidos`
-- GET `/ventas-por-categoria`
-- GET `/recaudacion-mensual-confirmada`
-- GET `/ganancias-diarias-confirmadas`
-- GET `/recaudacion-total-confirmada`
+    ### Estadísticas (`/api/estadisticas`)
+    - GET `/recaudacion-mensual`
+    - GET `/recaudacion-diaria`
+    - GET `/ultimas-ventas`
+    - GET `/productos-mas-vendidos`
+    - GET `/ventas-por-categoria`
+    - GET `/recaudacion-mensual-confirmada`
+    - GET `/ganancias-diarias-confirmadas`
+    - GET `/recaudacion-total-confirmada`
 
-> Nota: Los cuerpos de requests/responses utilizan los DTOs en `src/main/java/com/uade/tpo/demo/dto/` (p. ej., `UsuarioDTO`, `VideojuegoDTO`, `PedidoDTO`, etc.).
+    > Nota: Los cuerpos de requests/responses utilizan los DTOs en `src/main/java/com/uade/tpo/demo/dto/` (p. ej., `UsuarioDTO`, `VideojuegoDTO`, `PedidoDTO`, etc.).
 
 ## Seguridad (JWT)
 - Rutas públicas: endpoints bajo `/api/v1/auth` (registro/autenticación).
