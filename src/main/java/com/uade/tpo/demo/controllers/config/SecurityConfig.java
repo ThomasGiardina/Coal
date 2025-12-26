@@ -28,27 +28,28 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-            .csrf(csrf -> csrf.disable()) 
-            .cors(cors -> cors.configurationSource(corsConfigurationSource()))  
-            .authorizeHttpRequests(auth -> auth
-                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                .requestMatchers("GET", "/videojuegos/**").permitAll()
-                .requestMatchers("POST", "/videojuegos/**").hasRole("ADMIN")
-                .requestMatchers("PUT", "/videojuegos/**").hasRole("ADMIN")
-                .requestMatchers("DELETE", "/videojuegos/**").hasRole("ADMIN")
-                .requestMatchers("/api/v1/auth/**").permitAll()
-                .requestMatchers("/api/usuario/olvidar-contrasena").permitAll()
-                .requestMatchers("/carritos/**").hasAnyRole("ADMIN", "USER")
-                .requestMatchers("/api/pedidos/**").hasAnyRole("ADMIN", "USER")
-                .requestMatchers("/metodosPago/**").hasRole("USER")
-                .requestMatchers("/error").permitAll()
-                .requestMatchers("/Historial/**").hasAnyRole("ADMIN", "USER")
-                .requestMatchers("/fotos/**").hasRole("ADMIN")
-                .requestMatchers("/api/usuario/**").hasAnyRole("USER", "ADMIN")
-                .requestMatchers("/api/estadisticas/**").hasRole("ADMIN")
-                .anyRequest().authenticated()) 
-            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))  
-            .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class); 
+                .csrf(csrf -> csrf.disable())
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                        .requestMatchers("GET", "/videojuegos/**").permitAll()
+                        .requestMatchers("POST", "/videojuegos/**").hasRole("ADMIN")
+                        .requestMatchers("PUT", "/videojuegos/**").hasRole("ADMIN")
+                        .requestMatchers("DELETE", "/videojuegos/**").hasRole("ADMIN")
+                        .requestMatchers("/api/v1/auth/**").permitAll()
+                        .requestMatchers("/api/usuario/olvidar-contrasena").permitAll()
+                        .requestMatchers("/carritos/**").hasAnyRole("ADMIN", "USER")
+                        .requestMatchers("/api/pedidos/**").hasAnyRole("ADMIN", "USER")
+                        .requestMatchers("/metodosPago/**").hasRole("USER")
+                        .requestMatchers("/error").permitAll()
+                        .requestMatchers("/Historial/**").hasAnyRole("ADMIN", "USER")
+                        .requestMatchers("/fotos/**").hasRole("ADMIN")
+                        .requestMatchers("/api/usuario/**").hasAnyRole("USER", "ADMIN")
+                        .requestMatchers("/api/estadisticas/productos-mas-vendidos").permitAll()
+                        .requestMatchers("/api/estadisticas/**").hasRole("ADMIN")
+                        .anyRequest().authenticated())
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
@@ -57,9 +58,8 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(List.of(
-            "http://localhost:5173",
-            "http://localhost:5174"
-        ));
+                "http://localhost:5173",
+                "http://localhost:5174"));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setExposedHeaders(List.of("Authorization", "Content-Type"));
